@@ -1,0 +1,292 @@
+/* استایل‌های مدرن برای پنل ادمین */
+
+/* فونت IRANSans از CDN */
+@font-face {
+    font-family: 'IRANSans';
+    src: url('https://cdn.jsdelivr.net/gh/rastikerdar/iran-sans@v6.0.1/woff2/IRANSansWeb.woff2') format('woff2');
+    font-display: swap;
+}
+
+/* تغییر فونت کل پنل ادمین */
+body {
+    font-family: 'IRANSans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    direction: rtl;
+    text-align: right;
+}
+
+/* هدر پنل ادمین */
+#header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+#header h1 {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+/* منوی اصلی */
+.module h2, .module caption, .inline-group h2 {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 12px 15px;
+    border-radius: 8px 8px 0 0;
+    font-weight: 600;
+}
+
+/* دکمه‌ها */
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover, a.button:hover {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(67, 233, 123, 0.4);
+}
+
+/* جدول‌ها */
+#result_list {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+#result_list thead th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px;
+    font-weight: 600;
+}
+
+#result_list tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+#result_list tbody tr:hover {
+    background-color: #e3f2fd;
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+/* فرم‌ها */
+.form-row {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.form-row label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-row input, .form-row select, .form-row textarea {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+    border-color: #4facfe;
+    box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+    outline: none;
+}
+
+/* فرم‌های تاریخ شمسی */
+.form-row input[type="date"],
+.form-row input[type="datetime-local"] {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #4facfe;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-row input[type="date"]:focus,
+.form-row input[type="datetime-local"]:focus {
+    background: white;
+    border-color: #43e97b;
+    box-shadow: 0 0 0 3px rgba(67, 233, 123, 0.1);
+}
+
+/* کمک متن‌ها */
+.help {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* پیام‌ها */
+.messagelist {
+    margin: 20px 0;
+}
+
+.messagelist li {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.messagelist .success {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.messagelist .error {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+}
+
+.messagelist .warning {
+    background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+    color: #333;
+}
+
+/* منوی کناری */
+.module {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.module ul {
+    padding: 0;
+    margin: 0;
+}
+
+.module li {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    transition: all 0.3s ease;
+}
+
+.module li:hover {
+    background-color: #f8f9fa;
+    padding-right: 20px;
+}
+
+.module li:last-child {
+    border-bottom: none;
+}
+
+/* آمار و اطلاعات */
+.object-tools {
+    margin-bottom: 20px;
+}
+
+.object-tools a {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.object-tools a:hover {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(67, 233, 123, 0.4);
+}
+
+/* فیلترها */
+.filtered {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.filtered h2 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+/* صفحه‌بندی */
+.paginator {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.paginator a, .paginator .this-page {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 5px;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.paginator a {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.paginator a:hover {
+    background: #4facfe;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.paginator .this-page {
+    background: #4facfe;
+    color: white;
+    font-weight: 600;
+}
+
+/* حالت تاریک برای فیلدهای غیرفعال */
+.form-row input:disabled, .form-row select:disabled, .form-row textarea:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* انیمیشن‌ها */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.module, .form-row, #result_list {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* ریسپانسیو */
+@media (max-width: 768px) {
+    .form-row input, .form-row select, .form-row textarea {
+        max-width: 100%;
+    }
+    
+    .object-tools {
+        text-align: center;
+    }
+    
+    .object-tools a {
+        display: block;
+        margin: 10px 0;
+        text-align: center;
+    }
+}

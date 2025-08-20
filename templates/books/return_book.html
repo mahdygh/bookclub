@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}بازگشت کتاب{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="hero-section text-center mb-4">
+                <h1 class="display-4 fw-bold text-primary">بازگشت کتاب</h1>
+                <p class="lead">مدیریت بازگشت کتاب‌ها و ثبت امتیازات</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- اطلاعات مهم -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>نکته مهم</h5>
+                <p class="mb-0">بازگشت کتاب‌ها و ثبت امتیازات از طریق <strong>پنل ادمین</strong> انجام می‌شود. در این صفحه می‌توانید لیست تخصیص‌های فعال را مشاهده کنید.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- آمار کلی -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">تخصیص‌های فعال</h5>
+                    <h3 class="text-warning">{{ active_assignments.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">تخصیص‌های تکمیل شده</h5>
+                    <h3 class="text-success">{{ completed_assignments.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">تخصیص‌های دیر شده</h5>
+                    <h3 class="text-danger">{{ overdue_assignments.count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تخصیص‌های فعال -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">تخصیص‌های فعال</h5>
+                </div>
+                <div class="card-body">
+                    {% if active_assignments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>عضو</th>
+                                        <th>کتاب</th>
+                                        <th>تاریخ تخصیص</th>
+                                        <th>تاریخ موعد</th>
+                                        <th>وضعیت</th>
+                                        <th>عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for assignment in active_assignments %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ assignment.member.full_name }}</strong>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ assignment.book.title }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ assignment.book.author }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="text-primary">{{ assignment.assigned_date|date:"Y/m/d" }}</span>
+                                            </td>
+                                            <td>
+                                                {% if assignment.due_date < today %}
+                                                    <span class="text-danger fw-bold">{{ assignment.due_date|date:"Y/m/d" }}</span>
+                                                {% else %}
+                                                    <span class="text-success">{{ assignment.due_date|date:"Y/m/d" }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if assignment.due_date < today %}
+                                                    <span class="badge bg-danger">⚠ دیر شده</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">📖 در حال مطالعه</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'admin:books_bookassignment_change' assignment.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit me-1"></i>ویرایش
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">هیچ تخصیص فعالی وجود ندارد.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تخصیص‌های تکمیل شده -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">تخصیص‌های تکمیل شده</h5>
+                </div>
+                <div class="card-body">
+                    {% if completed_assignments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>عضو</th>
+                                        <th>کتاب</th>
+                                        <th>تاریخ بازگشت</th>
+                                        <th>امتیاز مطالعه</th>
+                                        <th>امتیاز آزمون</th>
+                                        <th>مجموع</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for assignment in completed_assignments %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ assignment.member.full_name }}</strong>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ assignment.book.title }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ assignment.book.author }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="text-success">{{ assignment.returned_date|date:"Y/m/d" }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ assignment.reading_score_earned }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ assignment.quiz_score_earned }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold text-success">{{ assignment.reading_score_earned|add:assignment.quiz_score_earned }}</span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">هیچ تخصیص تکمیل شده‌ای وجود ندارد.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- دکمه‌های عملیات -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'admin:books_bookassignment_changelist' %}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-list me-2"></i>مشاهده همه تخصیص‌ها
+            </a>
+            <a href="{% url 'admin:index' %}" class="btn btn-success btn-lg">
+                <i class="fas fa-cog me-2"></i>پنل ادمین
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

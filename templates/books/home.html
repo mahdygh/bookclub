@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}صفحه اصلی - کتابخانه گروهی{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if active_period %}
+        <!-- Hero Section -->
+        <div class="row mb-5">
+            <div class="col-lg-10 mx-auto text-center">
+                <div class="hero-section">
+                    <h1 class="display-4 fw-bold mb-3">{{ active_period.name }}</h1>
+                    <p class="lead mb-4">{{ active_period.description }}</p>
+                    <div class="row text-center g-4 mt-4">
+                        <div class="col-md-4">
+                            <div class="stats-card">
+                                <div class="number">{{ total_members }}</div>
+                                <div class="label">عضو فعال</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card">
+                                <div class="number">{{ total_books }}</div>
+                                <div class="label">کتاب</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card">
+                                <div class="number">{{ completed_books }}</div>
+                                <div class="label">کتاب خوانده شده</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stages Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="text-center mb-4">
+                    <i class="fas fa-layer-group text-primary me-2"></i>
+                    مراحل دوره
+                </h2>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {% for stage in stages %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="stage-card">
+                        <div class="stage-number">{{ stage.stage_number }}</div>
+                        <h4 class="fw-bold mb-3 text-gradient">{{ stage.name }}</h4>
+                        <p class="text-muted mb-4">{{ stage.description }}</p>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'books:stage_books' stage.id %}" class="btn btn-primary">
+                                <i class="fas fa-book me-2"></i>
+                                مشاهده کتاب‌ها
+                            </a>
+                            <a href="{% url 'books:stage_rankings' stage.id %}" class="btn btn-outline-primary">
+                                <i class="fas fa-trophy me-2"></i>
+                                رتبه‌بندی مرحله
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card shadow-custom rounded-custom">
+                    <div class="card-header">
+                        <h3 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            اقدامات سریع
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3 col-6">
+                                <a href="{% url 'books:rankings' %}" class="btn btn-primary w-100">
+                                    <i class="fas fa-trophy me-2"></i>
+                                    رتبه‌بندی کلی
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <a href="{% url 'books:assign_book' %}" class="btn btn-success w-100">
+                                    <i class="fas fa-book me-2"></i>
+                                    تخصیص کتاب
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <a href="{% url 'books:return_book' %}" class="btn btn-info w-100">
+                                    <i class="fas fa-undo me-2"></i>
+                                    بازگشت کتاب
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <a href="#" class="btn btn-warning w-100" onclick="showHelp()">
+                                    <i class="fas fa-question-circle me-2"></i>
+                                    راهنما
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- No Active Period -->
+        <div class="row">
+            <div class="col-lg-6 mx-auto text-center">
+                <div class="bg-light rounded-3 p-5">
+                    <i class="fas fa-book-open text-muted" style="font-size: 4rem;"></i>
+                    <h2 class="mt-3 mb-3">دوره فعالی یافت نشد</h2>
+                    <p class="text-muted mb-4">در حال حاضر هیچ دوره کتابخوانی فعالی وجود ندارد.</p>
+                    {% if user.is_staff %}
+                        <a href="{% url 'admin:books_readingperiod_add' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            ایجاد دوره جدید
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle text-primary me-2"></i>
+                    راهنمای استفاده
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">برای اعضا:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>مشاهده کتاب‌های مرحله فعلی</li>
+                            <li><i class="fas fa-check text-success me-2"></i>پیگیری پیشرفت شخصی</li>
+                            <li><i class="fas fa-check text-success me-2"></i>شرکت در آزمون‌ها</li>
+                            <li><i class="fas fa-check text-success me-2"></i>مشاهده رتبه‌بندی</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">برای مدیران:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>مدیریت دوره‌ها و مراحل</li>
+                            <li><i class="fas fa-check text-success me-2"></i>تخصیص کتاب به اعضا</li>
+                            <li><i class="fas fa-check text-success me-2"></i>ثبت بازگشت کتاب‌ها</li>
+                            <li><i class="fas fa-check text-success me-2"></i>مدیریت آزمون‌ها</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showHelp() {
+    new bootstrap.Modal(document.getElementById('helpModal')).show();
+}
+
+// Add hover effects
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.hover-shadow');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'transform 0.3s ease';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

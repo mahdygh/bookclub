@@ -1,0 +1,4 @@
+Django==4.2.7
+Pillow==10.1.0
+jdatetime==5.2.0
+django-jalali-date==2.0.0

@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تخصیص کتاب{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="hero-section text-center mb-4">
+                <h1 class="display-4 fw-bold text-primary">تخصیص کتاب</h1>
+                <p class="lead">مدیریت تخصیص کتاب‌ها به اعضا</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- اطلاعات مهم -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>نکته مهم</h5>
+                <p class="mb-0">تخصیص کتاب‌ها از طریق <strong>پنل ادمین</strong> انجام می‌شود. در این صفحه می‌توانید لیست اعضا و کتاب‌های موجود را مشاهده کنید.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- آمار کلی -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">کل اعضا</h5>
+                    <h3 class="text-primary">{{ members.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">کل کتاب‌ها</h5>
+                    <h3 class="text-success">{{ books.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">تخصیص‌های فعال</h5>
+                    <h3 class="text-warning">{{ active_assignments.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">تخصیص‌های تکمیل شده</h5>
+                    <h3 class="text-info">{{ completed_assignments.count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- لیست اعضا -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">لیست اعضا</h5>
+                </div>
+                <div class="card-body">
+                    {% if members %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>نام کامل</th>
+                                        <th>مرحله فعلی</th>
+                                        <th>امتیاز کل</th>
+                                        <th>وضعیت</th>
+                                        <th>عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for member in members %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ member.full_name }}</strong>
+                                            </td>
+                                            <td>
+                                                {% if member.current_stage %}
+                                                    <span class="badge bg-primary">{{ member.current_stage.name }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">تعیین نشده</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold text-success">{{ member.total_score }}</span>
+                                            </td>
+                                            <td>
+                                                {% if member.is_active %}
+                                                    <span class="badge bg-success">فعال</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">غیرفعال</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'member_progress' member.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>مشاهده پیشرفت
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">هیچ عضوی در سیستم ثبت نشده است.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- لیست کتاب‌ها -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">لیست کتاب‌ها</h5>
+                </div>
+                <div class="card-body">
+                    {% if books %}
+                        <div class="row">
+                            {% for book in books %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card h-100">
+                                        {% if book.cover_image %}
+                                            <img src="{{ book.cover_image.url }}" class="card-img-top" alt="{{ book.title }}" style="height: 200px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                <i class="fas fa-book fa-3x text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ book.title }}</h6>
+                                            <p class="card-text text-muted">{{ book.author }}</p>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="badge bg-primary">{{ book.reading_score }} امتیاز مطالعه</span>
+                                                <span class="badge bg-info">{{ book.quiz_score }} امتیاز آزمون</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-secondary">{{ book.stage.name }}</span>
+                                                <span class="badge bg-warning">{{ book.reading_days }} روز</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">هیچ کتابی در سیستم ثبت نشده است.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- دکمه‌های عملیات -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'admin:books_bookassignment_add' %}" class="btn btn-success btn-lg me-3">
+                <i class="fas fa-plus me-2"></i>تخصیص جدید
+            </a>
+            <a href="{% url 'admin:index' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-cog me-2"></i>پنل ادمین
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

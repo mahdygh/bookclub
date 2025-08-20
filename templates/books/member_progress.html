@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}پیشرفت {{ member.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="hero-section text-center mb-4">
+                <h1 class="display-4 fw-bold text-primary">پیشرفت {{ member.full_name }}</h1>
+                <p class="lead">نمایش وضعیت مطالعه و پیشرفت در مرحله فعلی</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- اطلاعات کلی عضو -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">اطلاعات کلی</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <h6 class="text-muted">مرحله فعلی</h6>
+                                <h4 class="text-primary">{{ member.current_stage.name|default:"تعیین نشده" }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <h6 class="text-muted">امتیاز کل</h6>
+                                <h4 class="text-success">{{ member.total_score }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">پیشرفت مرحله</h5>
+                    <div class="mb-3">
+                        <h6 class="text-muted">کتاب‌های تکمیل شده</h6>
+                        <h4 class="text-info">{{ member.get_completed_books_count }}/{{ member.get_total_books_in_stage }}</h4>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ member.get_stage_progress_percentage }}%"
+                             aria-valuenow="{{ member.get_stage_progress_percentage }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                            {{ member.get_stage_progress_percentage }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- کتاب‌های مرحله فعلی -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">کتاب‌های مرحله {{ member.current_stage.name|default:"تعیین نشده" }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if member.current_stage %}
+                        {% if member.get_current_stage_books %}
+                            <div class="row">
+                                {% for book in member.get_current_stage_books %}
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        <div class="card h-100 {% if book in member.get_completed_books %}border-success{% endif %}">
+                                            {% if book.cover_image %}
+                                                <img src="{{ book.cover_image.url }}" class="card-img-top" alt="{{ book.title }}" style="height: 200px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                    <i class="fas fa-book fa-3x text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="card-body">
+                                                <h6 class="card-title">{{ book.title }}</h6>
+                                                <p class="card-text text-muted">{{ book.author }}</p>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="badge bg-primary">{{ book.reading_score }} امتیاز</span>
+                                                    {% if book in member.get_completed_books %}
+                                                        <span class="badge bg-success">✓ تکمیل شده</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">📖 در انتظار</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">هیچ کتابی در این مرحله تعریف نشده است.</p>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                            <p class="text-muted">مرحله فعلی برای این عضو تعیین نشده است.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- دکمه بازگشت -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'rankings' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-right me-2"></i>بازگشت به رتبه‌بندی
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
