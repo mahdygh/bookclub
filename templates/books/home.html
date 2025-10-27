@@ -1,17 +1,32 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}صفحه اصلی - کتابخانه گروهی{% endblock %}
+{% block title %}صفحه اصلی - کتابخانه مسجد حوری{% endblock %}
 
 {% block content %}
 <div class="container">
+    {% if user.is_authenticated %}
+        <!-- Welcome Message -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-user-check me-2"></i>
+                    <strong>خوش آمدید آقا {{ user.first_name|default:user.username }}!</strong><br>
+                    شما با موفقیت وارد صفحه کتابخوانی خود شدید. پیش به سوی سربازی امام زمان 🤗
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
     {% if active_period %}
         <!-- Hero Section -->
         <div class="row mb-5">
             <div class="col-lg-10 mx-auto text-center">
                 <div class="hero-section">
-                    <h1 class="display-4 fw-bold mb-3">{{ active_period.name }}</h1>
-                    <p class="lead mb-4">{{ active_period.description }}</p>
+                    <h1 class="display-4 fw-bold mb-3" style="color: white !important;">{{ active_period.name }}</h1>
+                    <h3 class="mb-4" style="color: rgba(255,255,255,0.9) !important;">گروه شهید فخری زاده</h3>
+                    <p class="lead mb-4" style="color: white !important;">{{ active_period.description }}</p>
                     <div class="row text-center g-4 mt-4">
                         <div class="col-md-4">
                             <div class="stats-card">
@@ -50,8 +65,13 @@
             {% for stage in stages %}
                 <div class="col-lg-4 col-md-6">
                     <div class="stage-card">
+                        {% if stage.image %}
+                            <div class="stage-image mb-3">
+                                <img src="{{ stage.image.url }}" alt="{{ stage.name }}" class="img-fluid rounded" style="max-height: 200px; width: 100%; object-fit: cover;">
+                            </div>
+                        {% endif %}
                         <div class="stage-number">{{ stage.stage_number }}</div>
-                        <h4 class="fw-bold mb-3 text-gradient">{{ stage.name }}</h4>
+                        <h4 class="fw-bold mb-3" style="color: var(--primary);">{{ stage.name }}</h4>
                         <p class="text-muted mb-4">{{ stage.description }}</p>
                         <div class="d-grid gap-2">
                             <a href="{% url 'books:stage_books' stage.id %}" class="btn btn-primary">
@@ -80,25 +100,28 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-3 col-6">
+                            <div class="col-md-4 col-6">
                                 <a href="{% url 'books:rankings' %}" class="btn btn-primary w-100">
                                     <i class="fas fa-trophy me-2"></i>
                                     رتبه‌بندی کلی
                                 </a>
                             </div>
-                            <div class="col-md-3 col-6">
-                                <a href="{% url 'books:assign_book' %}" class="btn btn-success w-100">
-                                    <i class="fas fa-book me-2"></i>
-                                    تخصیص کتاب
-                                </a>
-                            </div>
-                            <div class="col-md-3 col-6">
-                                <a href="{% url 'books:return_book' %}" class="btn btn-info w-100">
-                                    <i class="fas fa-undo me-2"></i>
-                                    بازگشت کتاب
-                                </a>
-                            </div>
-                            <div class="col-md-3 col-6">
+                            {% if user.is_staff %}
+                                <div class="col-md-4 col-6">
+                                    <a href="{% url 'books:admin_member_progress' %}" class="btn btn-secondary w-100">
+                                        <i class="fas fa-users me-2"></i>
+                                        وضعیت اعضا
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="col-md-4 col-6">
+                                    <a href="{% url 'books:user_progress' %}" class="btn btn-secondary w-100">
+                                        <i class="fas fa-user me-2"></i>
+                                        وضعیت من
+                                    </a>
+                                </div>
+                            {% endif %}
+                            <div class="col-md-4 col-6">
                                 <a href="#" class="btn btn-warning w-100" onclick="showHelp()">
                                     <i class="fas fa-question-circle me-2"></i>
                                     راهنما
@@ -143,22 +166,12 @@
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="fw-bold text-primary">برای اعضا:</h6>
+                    <div class="col-12">
+                        <h6 class="fw-bold text-primary mb-3">امکانات سیستم:</h6>
                         <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success me-2"></i>مشاهده کتاب‌های مرحله فعلی</li>
-                            <li><i class="fas fa-check text-success me-2"></i>پیگیری پیشرفت شخصی</li>
-                            <li><i class="fas fa-check text-success me-2"></i>شرکت در آزمون‌ها</li>
-                            <li><i class="fas fa-check text-success me-2"></i>مشاهده رتبه‌بندی</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="fw-bold text-primary">برای مدیران:</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success me-2"></i>مدیریت دوره‌ها و مراحل</li>
-                            <li><i class="fas fa-check text-success me-2"></i>تخصیص کتاب به اعضا</li>
-                            <li><i class="fas fa-check text-success me-2"></i>ثبت بازگشت کتاب‌ها</li>
-                            <li><i class="fas fa-check text-success me-2"></i>مدیریت آزمون‌ها</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>مشاهده کتاب‌های مرحله فعلی</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>پیگیری پیشرفت شخصی</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>مشاهده رتبه‌بندی</li>
                         </ul>
                     </div>
                 </div>

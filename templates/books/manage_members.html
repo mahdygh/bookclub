@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}مدیریت اعضا - کتابخانه مسجد حوری{% endblock %}
+
+{% block extra_css %}
+<style>
+    .member-card {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .member-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .member-card.has-user {
+        border-color: #28a745;
+        background: linear-gradient(135deg, #d4edda 0%, #f8f9fa 100%);
+    }
+    
+    .member-card.no-user {
+        border-color: #dc3545;
+        background: linear-gradient(135deg, #f8d7da 0%, #f8f9fa 100%);
+    }
+    
+    .user-status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .user-status.has-account {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .user-status.no-account {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .form-floating {
+        margin-bottom: 1rem;
+    }
+    
+    .form-floating input {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-floating input:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .btn-action {
+        margin: 0.25rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-1px);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-card .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-card .label {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-center mb-4">
+                <i class="fas fa-users-cog me-2"></i>
+                مدیریت اعضا و حساب‌های کاربری
+            </h1>
+        </div>
+    </div>
+    
+    <!-- آمار کلی -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="number">{{ members|length }}</div>
+                <div class="label">کل اعضا</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="number">{{ members|length|add:"-1" }}</div>
+                <div class="label">دارای حساب کاربری</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="number">1</div>
+                <div class="label">بدون حساب کاربری</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- لیست اعضا -->
+    <div class="row">
+        {% for member in members %}
+            <div class="col-lg-6 col-xl-4">
+                <div class="member-card {% if member.has_user_account %}has-user{% else %}no-user{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>
+                            {{ member.full_name }}
+                        </h5>
+                        <span class="user-status {% if member.has_user_account %}has-account{% else %}no-account{% endif %}">
+                            {% if member.has_user_account %}
+                                <i class="fas fa-check me-1"></i>
+                                دارای حساب
+                            {% else %}
+                                <i class="fas fa-times me-1"></i>
+                                بدون حساب
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-trophy me-1"></i>
+                            امتیاز کل: <strong>{{ member.total_score }}</strong>
+                        </small>
+                        {% if member.current_stage %}
+                            <br>
+                            <small class="text-muted">
+                                <i class="fas fa-layer-group me-1"></i>
+                                مرحله فعلی: <strong>{{ member.current_stage.name }}</strong>
+                            </small>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex flex-wrap">
+                        {% if member.has_user_account %}
+                            <button class="btn btn-info btn-sm btn-action" 
+                                    onclick="editUser({{ member.id }}, '{{ member.user.username }}', '{{ member.user.first_name }}', '{{ member.user.last_name }}', '{{ member.user.email }}')">
+                                <i class="fas fa-edit me-1"></i>
+                                ویرایش
+                            </button>
+                            <button class="btn btn-danger btn-sm btn-action" 
+                                    onclick="deleteUser({{ member.id }}, '{{ member.full_name }}')">
+                                <i class="fas fa-trash me-1"></i>
+                                حذف حساب
+                            </button>
+                        {% else %}
+                            <button class="btn btn-success btn-sm btn-action" 
+                                    onclick="createUser({{ member.id }}, '{{ member.full_name }}')">
+                                <i class="fas fa-plus me-1"></i>
+                                ایجاد حساب
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal ایجاد حساب کاربری -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>
+                    ایجاد حساب کاربری
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="create_user">
+                    <input type="hidden" name="member_id" id="create_member_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">عضو:</label>
+                        <div class="form-control-plaintext" id="create_member_name"></div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>نام کاربری و رمز عبور خودکار تولید می‌شود:</strong><br>
+                        • نام کاربری: حرف اول اسم + . + فامیلی + 313<br>
+                        • رمز عبور: masjedhoori
+                    </div>
+                    
+                    <div class="form-floating">
+                        <input type="email" class="form-control" id="create_email" name="email">
+                        <label for="create_email">ایمیل (اختیاری)</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-1"></i>
+                        ایجاد حساب
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ویرایش حساب کاربری -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-edit me-2"></i>
+                    ویرایش حساب کاربری
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="update_user">
+                    <input type="hidden" name="member_id" id="edit_member_id">
+                    
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="edit_first_name" name="first_name">
+                        <label for="edit_first_name">نام</label>
+                    </div>
+                    
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="edit_last_name" name="last_name">
+                        <label for="edit_last_name">نام خانوادگی</label>
+                    </div>
+                    
+                    <div class="form-floating">
+                        <input type="email" class="form-control" id="edit_email" name="email">
+                        <label for="edit_email">ایمیل</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>
+                        ذخیره تغییرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal حذف حساب کاربری -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    حذف حساب کاربری
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="delete_user">
+                    <input type="hidden" name="member_id" id="delete_member_id">
+                    
+                    <p>آیا مطمئن هستید که می‌خواهید حساب کاربری <strong id="delete_member_name"></strong> را حذف کنید؟</p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-warning me-2"></i>
+                        این عمل قابل بازگشت نیست!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>
+                        حذف حساب
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function createUser(memberId, memberName) {
+    document.getElementById('create_member_id').value = memberId;
+    document.getElementById('create_member_name').textContent = memberName;
+    document.getElementById('create_email').value = '';
+    
+    new bootstrap.Modal(document.getElementById('createUserModal')).show();
+}
+
+function editUser(memberId, username, firstName, lastName, email) {
+    document.getElementById('edit_member_id').value = memberId;
+    document.getElementById('edit_first_name').value = firstName || '';
+    document.getElementById('edit_last_name').value = lastName || '';
+    document.getElementById('edit_email').value = email || '';
+    
+    new bootstrap.Modal(document.getElementById('editUserModal')).show();
+}
+
+function deleteUser(memberId, memberName) {
+    document.getElementById('delete_member_id').value = memberId;
+    document.getElementById('delete_member_name').textContent = memberName;
+    
+    new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
+}
+
+</script>
+{% endblock %}

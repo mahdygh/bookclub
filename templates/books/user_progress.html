@@ -1,0 +1,387 @@
+{% extends 'base_modern.html' %}
+{% load static %}
+{% load jalali_tags %}
+
+{% block title %}وضعیت من - کتابخانه مسجد حوری{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- پیام خوش‌آمدگویی - فقط برای ورود جدید -->
+    {% if show_welcome %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success modern-alert alert-dismissible fade show" role="alert">
+                <i class="fas fa-user-check me-2"></i>
+                <strong>خوش آمدید آقا {{ user.first_name|default:user.username }}!</strong><br>
+                شما با موفقیت وارد صفحه کتابخوانی خود شدید. پیش به سوی سربازی امام زمان 🤗
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if active_period %}
+        {% if member %}
+            <!-- Profile Header -->
+            <div class="gradient-hero mb-4">
+                <div class="d-flex align-items-center justify-content-center flex-wrap">
+                    <div class="profile-image-large me-3">
+                        {% if member.profile_image %}
+                            <img src="{{ member.profile_image.url }}" alt="{{ member.full_name }}">
+                        {% else %}
+                            <i class="fas fa-user"></i>
+                        {% endif %}
+                    </div>
+                    <div class="text-start">
+                        <h2 class="mb-2 fw-bold">{{ member.full_name }}</h2>
+                        <p class="mb-2">{{ member.get_group_display }}</p>
+                        <span class="badge-modern badge-success-large">امتیاز کل: {{ member.total_score|to_persian_number }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if stage %}
+            <!-- Stage Info Card -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="modern-card stage-card">
+                        <div class="row align-items-center">
+                            {% if stage.image %}
+                            <div class="col-md-3 text-center">
+                                <img src="{{ stage.image.url }}" alt="{{ stage.name }}" class="stage-image">
+                            </div>
+                            {% endif %}
+                            <div class="{% if stage.image %}col-md-9{% else %}col-12{% endif %}">
+                                <h4 class="mb-2 text-gradient">
+                                    <i class="fas fa-layer-group me-2"></i>
+                                    {{ stage.name }}
+                                </h4>
+                                <p class="text-muted mb-3">{{ stage.description }}</p>
+                                
+                                <!-- نوار پیشرفت -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="fw-bold">پیشرفت مرحله:</span>
+                                        <span class="fw-bold text-success">{{ progress_stats.progress_percentage|to_persian_number }}%</span>
+                                    </div>
+                                    <div class="progress-modern">
+                                        <div class="progress-bar-modern" style="width: {{ progress_stats.progress_percentage }}%"></div>
+                                    </div>
+                                    <small class="text-muted mt-2 d-block">
+                                        {{ progress_stats.completed_books|to_persian_number }} از {{ progress_stats.total_books_in_stage|to_persian_number }} کتاب
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Books Section -->
+            <div class="row g-4">
+                <!-- کتاب‌های خوانده شده -->
+                <div class="col-lg-6">
+                    <div class="modern-card">
+                        <h5 class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            کتاب‌های خوانده شده
+                            <span class="badge-modern badge-success ms-2">{{ completed_books|length|to_persian_number }}</span>
+                        </h5>
+                        
+                        {% if completed_books %}
+                            <div class="books-list">
+                                {% for book_info in completed_books %}
+                                    <div class="book-item completed">
+                                        <div class="book-info">
+                                            <h6 class="mb-1 fw-bold">{{ book_info.book.title }}</h6>
+                                            <small class="text-muted d-block mb-2">{{ book_info.book.author }}</small>
+                                            <div class="d-flex gap-2">
+                                                <span class="badge-modern badge-success-sm">{{ book_info.score|to_persian_number }} امتیاز</span>
+                                                <small class="text-muted">{{ book_info.returned_date|to_jalali }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="book-icon">
+                                            <i class="fas fa-check-circle text-success"></i>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center py-4">هنوز کتابی نخوانده‌اید</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- کتاب‌های نخوانده -->
+                <div class="col-lg-6">
+                    <div class="modern-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">
+                                <i class="fas fa-book-open text-warning me-2"></i>
+                                کتاب‌های نخوانده
+                                <span class="badge-modern badge-warning ms-2">{{ uncompleted_books|length|to_persian_number }}</span>
+                            </h5>
+                            {% if uncompleted_books %}
+                            <button class="toggle-btn" onclick="toggleUnreadBooks()">
+                                <i class="fas fa-chevron-down" id="unreadToggleIcon"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        
+                        {% if uncompleted_books %}
+                            <div class="books-list" id="unreadBooksList">
+                                {% for book_info in uncompleted_books %}
+                                    <div class="book-item unread">
+                                        <div class="book-info">
+                                            <h6 class="mb-1 fw-bold">{{ book_info.book.title }}</h6>
+                                            <small class="text-muted d-block mb-2">{{ book_info.book.author }}</small>
+                                            {% if book_info.assignment %}
+                                                <small class="text-muted">موعد: {{ book_info.assignment.due_date|to_jalali }}</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="book-icon">
+                                            <i class="fas fa-clock text-warning"></i>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center py-4">همه کتاب‌ها خوانده شده!</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% else %}
+                <div class="modern-card text-center">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">مرحله‌ای تعیین نشده</h4>
+                    <p class="text-muted">لطفاً با مدیر تماس بگیرید.</p>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="modern-card text-center">
+                <i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">عضو مربوط به شما یافت نشد</h4>
+                <p class="text-muted">لطفاً با مدیر تماس بگیرید.</p>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="modern-card text-center">
+            <i class="fas fa-exclamation-circle text-danger" style="font-size: 3rem;"></i>
+            <h4 class="mt-3">دوره فعالی یافت نشد</h4>
+            <p class="text-muted">لطفاً ابتدا یک دوره کتابخوانی فعال کنید.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.profile-image-large {
+    width: 120px;
+    height: 120px;
+    min-width: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #34D399, #10B981);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(52, 211, 153, 0.3);
+    border: 4px solid white;
+}
+
+.profile-image-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-image-large i {
+    font-size: 3rem;
+    color: white;
+}
+
+.badge-success-large {
+    background: linear-gradient(135deg, #34D399, #10B981);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 15px rgba(52, 211, 153, 0.3);
+}
+
+.stage-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(249, 250, 251, 0.95));
+    border: 2px solid rgba(52, 211, 153, 0.2);
+}
+
+.stage-image {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.progress-modern {
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 50px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-modern {
+    height: 100%;
+    background: linear-gradient(90deg, #34D399, #10B981);
+    border-radius: 50px;
+    transition: width 0.6s ease;
+    box-shadow: 0 2px 8px rgba(52, 211, 153, 0.4);
+}
+
+.books-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.book-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.book-item:hover {
+    transform: translateX(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.book-item.completed {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(16, 185, 129, 0.05));
+    border-color: rgba(52, 211, 153, 0.3);
+}
+
+.book-item.unread {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.05));
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.book-info {
+    flex: 1;
+}
+
+.book-icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.badge-modern {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.badge-success {
+    background: linear-gradient(135deg, #34D399, #10B981);
+    color: white;
+}
+
+.badge-warning {
+    background: linear-gradient(135deg, #FFC947, #FFB020);
+    color: white;
+}
+
+.badge-success-sm {
+    background: linear-gradient(135deg, #34D399, #10B981);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.toggle-btn {
+    background: rgba(52, 211, 153, 0.1);
+    border: 2px solid rgba(52, 211, 153, 0.3);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #10B981;
+}
+
+.toggle-btn:hover {
+    background: rgba(52, 211, 153, 0.2);
+    transform: scale(1.1);
+}
+
+.toggle-btn i {
+    transition: transform 0.3s ease;
+}
+
+.toggle-btn.rotated i {
+    transform: rotate(180deg);
+}
+
+.modern-alert {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #34D399, #10B981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+@media (max-width: 768px) {
+    .profile-image-large {
+        width: 80px;
+        height: 80px;
+        min-width: 80px;
+    }
+    
+    .profile-image-large i {
+        font-size: 2rem;
+    }
+    
+    .badge-success-large {
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .stage-image {
+        max-width: 150px;
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<script>
+function toggleUnreadBooks() {
+    const booksList = document.getElementById('unreadBooksList');
+    const toggleIcon = document.getElementById('unreadToggleIcon');
+    const toggleBtn = toggleIcon.closest('.toggle-btn');
+    
+    if (booksList.style.display === 'none') {
+        booksList.style.display = 'block';
+        toggleBtn.classList.remove('rotated');
+    } else {
+        booksList.style.display = 'none';
+        toggleBtn.classList.add('rotated');
+    }
+}
+</script>
+{% endblock %}

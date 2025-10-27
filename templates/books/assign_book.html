@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}تخصیص کتاب{% endblock %}
+{% block title %}امانت گرفتن کتاب{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="row">
         <div class="col-12">
             <div class="hero-section text-center mb-4">
-                <h1 class="display-4 fw-bold text-primary">تخصیص کتاب</h1>
-                <p class="lead">مدیریت تخصیص کتاب‌ها به اعضا</p>
+                <h1 class="display-4 fw-bold text-primary">امانت گرفتن کتاب</h1>
+                <p class="lead">مدیریت امانت گرفتن کتاب‌ها توسط اعضا</p>
             </div>
         </div>
     </div>
@@ -19,7 +19,7 @@
         <div class="col-12">
             <div class="alert alert-info">
                 <h5><i class="fas fa-info-circle me-2"></i>نکته مهم</h5>
-                <p class="mb-0">تخصیص کتاب‌ها از طریق <strong>پنل ادمین</strong> انجام می‌شود. در این صفحه می‌توانید لیست اعضا و کتاب‌های موجود را مشاهده کنید.</p>
+                <p class="mb-0">امانت گرفتن کتاب‌ها از طریق <strong>پنل ادمین</strong> انجام می‌شود. در این صفحه می‌توانید لیست اعضا و کتاب‌های موجود را مشاهده کنید.</p>
             </div>
         </div>
     </div>
@@ -45,7 +45,7 @@
         <div class="col-md-3">
             <div class="card stats-card text-center">
                 <div class="card-body">
-                    <h5 class="card-title">تخصیص‌های فعال</h5>
+                    <h5 class="card-title">امانت‌های فعال</h5>
                     <h3 class="text-warning">{{ active_assignments.count }}</h3>
                 </div>
             </div>
@@ -53,7 +53,7 @@
         <div class="col-md-3">
             <div class="card stats-card text-center">
                 <div class="card-body">
-                    <h5 class="card-title">تخصیص‌های تکمیل شده</h5>
+                    <h5 class="card-title">امانت‌های تکمیل شده</h5>
                     <h3 class="text-info">{{ completed_assignments.count }}</h3>
                 </div>
             </div>
@@ -175,7 +175,7 @@
     <div class="row mt-4">
         <div class="col-12 text-center">
             <a href="{% url 'admin:books_bookassignment_add' %}" class="btn btn-success btn-lg me-3">
-                <i class="fas fa-plus me-2"></i>تخصیص جدید
+                <i class="fas fa-plus me-2"></i>امانت جدید
             </a>
             <a href="{% url 'admin:index' %}" class="btn btn-primary btn-lg">
                 <i class="fas fa-cog me-2"></i>پنل ادمین

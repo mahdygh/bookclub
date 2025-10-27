@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.utils import timezone
 from django import forms
 import jdatetime
-from .models import ReadingPeriod, Stage, Book, Member, BookAssignment
+from .models import ReadingPeriod, Stage, Book, Member, BookAssignment, WeeklyScore
 
 class ReadingPeriodAdminForm(forms.ModelForm):
     start_date = forms.DateField(
@@ -62,10 +62,16 @@ class ReadingPeriodAdmin(admin.ModelAdmin):
 
 @admin.register(Stage)
 class StageAdmin(admin.ModelAdmin):
-    list_display = ['name', 'period', 'stage_number', 'order', 'books_count']
+    list_display = ['name', 'period', 'stage_number', 'order', 'image_preview', 'books_count']
     list_filter = ['period', 'stage_number']
     search_fields = ['name', 'description']
     ordering = ['period', 'order', 'stage_number']
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" width="50" height="50" style="border-radius: 5px;" />', obj.image.url)
+        return "بدون عکس"
+    image_preview.short_description = "تصویر"
     
     def books_count(self, obj):
         return obj.book_set.count()
@@ -84,8 +90,8 @@ class BookAdmin(admin.ModelAdmin):
 
 @admin.register(Member)
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ['full_name', 'current_stage', 'total_score', 'stage_progress', 'is_active']
-    list_filter = ['current_stage', 'is_active', 'current_stage__period']
+    list_display = ['full_name', 'group_display', 'current_stage', 'total_score', 'stage_progress', 'is_active']
+    list_filter = ['group', 'current_stage', 'is_active', 'current_stage__period']
     search_fields = ['first_name', 'last_name']
     ordering = ['-total_score', 'first_name']
     readonly_fields = ['total_score', 'stage_progress']
@@ -93,6 +99,10 @@ class MemberAdmin(admin.ModelAdmin):
     def full_name(self, obj):
         return obj.full_name
     full_name.short_description = "نام کامل"
+    
+    def group_display(self, obj):
+        return obj.get_group_display()
+    group_display.short_description = "گروه"
     
     def stage_progress(self, obj):
         if obj.current_stage:
@@ -106,8 +116,8 @@ class MemberAdmin(admin.ModelAdmin):
 class BookAssignmentAdminForm(forms.ModelForm):
     assigned_date = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-        label="تاریخ تخصیص (شمسی)",
-        help_text="تاریخ و زمان تخصیص را به صورت شمسی وارد کنید"
+        label="تاریخ امانت گرفتن (شمسی)",
+        help_text="تاریخ و زمان امانت گرفتن را به صورت شمسی وارد کنید"
     )
     due_date = forms.DateField(
         widget=forms.DateInput(attrs={'type': 'date'}),
@@ -135,7 +145,7 @@ class BookAssignmentAdmin(admin.ModelAdmin):
     readonly_fields = ['late_days', 'reading_score_earned']
     
     fieldsets = (
-        ('اطلاعات تخصیص', {
+        ('اطلاعات امانت گرفتن', {
             'fields': ('member', 'book', 'assigned_date', 'due_date')
         }),
         ('اطلاعات بازگشت', {
@@ -151,7 +161,7 @@ class BookAssignmentAdmin(admin.ModelAdmin):
         if obj.assigned_date:
             return jdatetime.datetime.fromgregorian(datetime=obj.assigned_date).strftime('%Y/%m/%d %H:%M')
         return '-'
-    assigned_date_jalali.short_description = "تاریخ تخصیص (شمسی)"
+    assigned_date_jalali.short_description = "تاریخ امانت گرفتن (شمسی)"
     
     def due_date_jalali(self, obj):
         if obj.due_date:
@@ -175,7 +185,33 @@ class BookAssignmentAdmin(admin.ModelAdmin):
     scores.short_description = "امتیازات"
     
     def save_model(self, request, obj, form, change):
-        # اگر کتاب بازگشت داده شده، تخصیص را تکمیل کن
+        # اگر کتاب بازگشت داده شده، امانت گرفتن را تکمیل کن
         if obj.returned_date and not obj.is_completed:
             obj.complete_assignment(obj.quiz_score_earned, obj.notes)
         super().save_model(request, obj, form, change)
+
+@admin.register(WeeklyScore)
+class WeeklyScoreAdmin(admin.ModelAdmin):
+    list_display = ['member', 'week_start_date_jalali', 'week_end_date_jalali', 'weekly_score', 'updated_at_jalali']
+    list_filter = ['week_start_date', 'member__group']
+    search_fields = ['member__first_name', 'member__last_name']
+    ordering = ['-week_start_date', '-weekly_score']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def week_start_date_jalali(self, obj):
+        if obj.week_start_date:
+            return jdatetime.datetime.fromgregorian(datetime=obj.week_start_date).strftime('%Y/%m/%d')
+        return '-'
+    week_start_date_jalali.short_description = "شروع هفته (شمسی)"
+    
+    def week_end_date_jalali(self, obj):
+        if obj.week_end_date:
+            return jdatetime.datetime.fromgregorian(datetime=obj.week_end_date).strftime('%Y/%m/%d')
+        return '-'
+    week_end_date_jalali.short_description = "پایان هفته (شمسی)"
+    
+    def updated_at_jalali(self, obj):
+        if obj.updated_at:
+            return jdatetime.datetime.fromgregorian(datetime=obj.updated_at).strftime('%Y/%m/%d %H:%M')
+        return '-'
+    updated_at_jalali.short_description = "آخرین به‌روزرسانی (شمسی)"

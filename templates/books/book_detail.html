@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ book.title }} - کتابخانه مسجد حوری{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="hero-section text-center">
+                <h1 class="display-4 fw-bold mb-3" style="color: white !important;">
+                    <i class="fas fa-book me-3"></i>
+                    {{ book.title }}
+                </h1>
+                <p class="lead mb-4" style="color: white !important;">نویسنده: {{ book.author }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- تصویر و اطلاعات کتاب -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                {% if book.cover_image %}
+                    <img src="{{ book.cover_image.url }}" class="card-img-top book-detail-cover" alt="{{ book.title }}">
+                {% else %}
+                    <div class="book-detail-placeholder">
+                        <i class="fas fa-book fa-5x text-muted"></i>
+                    </div>
+                {% endif %}
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text text-muted">{{ book.author }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- جزئیات کتاب -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        اطلاعات کتاب
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <h6 class="text-muted">عنوان کتاب</h6>
+                                <p class="fw-bold">{{ book.title }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <h6 class="text-muted">نویسنده</h6>
+                                <p class="fw-bold">{{ book.author }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <h6 class="text-muted">مرحله</h6>
+                                <p class="fw-bold">{{ book.stage.name }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <h6 class="text-muted">تعداد روز مطالعه</h6>
+                                <p class="fw-bold">{{ book.reading_days }} روز</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="score-card">
+                                <div class="score-icon">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                                <div class="score-info">
+                                    <h6 class="text-muted">امتیاز مطالعه</h6>
+                                    <h4 class="text-primary">{{ book.reading_score }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="score-card">
+                                <div class="score-icon">
+                                    <i class="fas fa-question-circle"></i>
+                                </div>
+                                <div class="score-info">
+                                    <h6 class="text-muted">امتیاز آزمون</h6>
+                                    <h4 class="text-success">{{ book.quiz_score }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-muted">توضیحات</h6>
+                        <p class="text-justify">{{ book.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- امانت‌های کتاب -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        امانت‌های این کتاب
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if assignments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>عضو</th>
+                                        <th>تاریخ امانت</th>
+                                        <th>تاریخ موعد</th>
+                                        <th>وضعیت</th>
+                                        <th>امتیاز کسب شده</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for assignment in assignments %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ assignment.member.full_name }}</strong>
+                                            </td>
+                                            <td>{{ assignment.assigned_date|date:"Y/m/d" }}</td>
+                                            <td>{{ assignment.due_date|date:"Y/m/d" }}</td>
+                                            <td>
+                                                {% if assignment.is_completed %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>
+                                                        تکمیل شده
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        در حال مطالعه
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if assignment.is_completed %}
+                                                    <strong class="text-success">
+                                                        {{ assignment.reading_score_earned|add:assignment.quiz_score_earned }}
+                                                    </strong>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-book-open text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3 text-muted">هنوز کسی این کتاب را امانت نگرفته است</h5>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- دکمه‌های عملیات -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'books:stage_books' book.stage.id %}" class="btn btn-secondary me-3">
+                <i class="fas fa-arrow-right me-2"></i>
+                بازگشت به مرحله
+            </a>
+            <a href="{% url 'books:home' %}" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>
+                صفحه اصلی
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .book-detail-cover {
+        height: 400px;
+        object-fit: cover;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .book-detail-placeholder {
+        height: 400px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .info-item {
+        margin-bottom: 1rem;
+    }
+    
+    .score-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .score-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-left: 1rem;
+    }
+    
+    .score-info h4 {
+        margin: 0;
+        font-weight: bold;
+    }
+    
+    .table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+</style>
+{% endblock %}

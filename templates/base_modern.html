@@ -1,0 +1,225 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}کتابخانه مسجد حوری{% endblock %}</title>
+    
+    <!-- Bootstrap RTL CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/modern-style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-light">
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <i class="fas fa-list me-2"></i>
+                    <span>فهرست</span>
+                </div>
+                <button class="sidebar-toggle d-lg-none" id="sidebarCollapse">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <nav class="sidebar-nav">
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a href="{% url 'books:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                                <i class="fas fa-home"></i>
+                                <span>صفحه اصلی</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'books:rankings' %}" class="nav-link {% if request.resolver_match.url_name == 'rankings' %}active{% endif %}">
+                                <i class="fas fa-trophy"></i>
+                                <span>رتبه‌بندی کتابخوانی</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link disabled" style="cursor: not-allowed; background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.6);">
+                                <i class="fas fa-sitemap"></i>
+                                <span>رده‌بندی تشکیلاتی <small style="color: #34d399;">(به‌زودی)</small></span>
+                            </a>
+                        </li>
+                        
+                        {% if user.is_authenticated %}
+                            {% if user.is_staff %}
+                                <li class="nav-divider">
+                                    <span>مدیریت</span>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'books:admin_member_progress' %}" class="nav-link">
+                                        <i class="fas fa-users"></i>
+                                        <span>وضعیت اعضا</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'books:manage_members' %}" class="nav-link">
+                                        <i class="fas fa-users-cog"></i>
+                                        <span>مدیریت اعضا</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/" target="_blank" class="nav-link">
+                                        <i class="fas fa-cog"></i>
+                                        <span>پنل ادمین</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="nav-divider">
+                                    <span>پنل کاربری</span>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'books:user_progress' %}" class="nav-link {% if request.resolver_match.url_name == 'user_progress' %}active{% endif %}">
+                                        <i class="fas fa-user"></i>
+                                        <span>وضعیت من</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endif %}
+                    </ul>
+                </nav>
+                
+                <!-- User Info at Bottom -->
+                <div class="sidebar-footer">
+                    {% if user.is_authenticated %}
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-details">
+                                <div class="user-name">{{ user.first_name|default:user.username }}</div>
+                                <div class="user-role">{% if user.is_staff %}مدیر{% else %}کاربر{% endif %}</div>
+                            </div>
+                        </div>
+                        <a href="{% url 'books:logout' %}" class="btn btn-logout">
+                            <i class="fas fa-sign-out-alt me-2"></i>
+                            خروج
+                        </a>
+                    {% else %}
+                        <a href="{% url 'books:login' %}" class="btn btn-login">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            ورود
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Modern Header -->
+            <header class="modern-header">
+                <button class="header-menu-btn d-lg-none" id="headerSidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+            <div class="header-logo">
+                <div class="logo-icon">
+                    <img src="/media/logo.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;">
+                </div>
+                <span class="header-title">هیچ چیز جای کتاب را پر نمی کند!</span>
+            </div>
+                
+                <div class="header-spacer"></div>
+            </header>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="container-fluid mt-3">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show modern-alert" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Page Content -->
+            <main class="page-content">
+                {% block content %}{% endblock %}
+            </main>
+
+            <!-- Footer -->
+            <footer class="modern-footer">
+                <div class="container-fluid">
+                    <div class="row mb-3">
+                        <div class="col-12 text-center">
+                            <p class="mb-0" style="color: #34d399; font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ۵ جمادی الاولی ۱۴۴۷، ولادت حضرت زینب (س)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row align-items-center justify-content-center">
+                        <div class="col-md-3 mb-3 mb-md-0 text-center text-md-start">
+                            <p class="mb-0 fw-bold">© 1404 کتابخانه مسجد حوری</p>
+                        </div>
+                        <div class="col-md-6 mb-3 mb-md-0 text-center">
+                            <a href="https://ble.ir/M_karimi313" target="_blank" class="footer-link">
+                                <i class="fas fa-headset me-2"></i>
+                                پشتیبانی
+                            </a>
+                        </div>
+                        <div class="col-md-3 text-center text-md-end">
+                            <a href="https://ble.ir/masjedhoori99" target="_blank" class="footer-link">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                کانال بله
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarCollapse = document.getElementById('sidebarCollapse');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+        }
+        
+        if (sidebarCollapse) {
+            sidebarCollapse.addEventListener('click', toggleSidebar);
+        }
+        
+        if (overlay) {
+            overlay.addEventListener('click', toggleSidebar);
+        }
+        
+        // Header sidebar toggle
+        const headerSidebarToggle = document.getElementById('headerSidebarToggle');
+        if (headerSidebarToggle) {
+            headerSidebarToggle.addEventListener('click', toggleSidebar);
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

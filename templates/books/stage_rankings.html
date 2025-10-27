@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}رتبه‌بندی {{ stage.name }} - کتابخانه مسجد حوری{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <div class="hero-section">
+                {% if stage.image %}
+                    <div class="stage-header-image mb-4">
+                        <img src="{{ stage.image.url }}" alt="{{ stage.name }}" class="img-fluid rounded" style="max-height: 300px; width: 100%; object-fit: cover; box-shadow: 0 8px 30px rgba(0,0,0,0.3);">
+                    </div>
+                {% endif %}
+                <h1 class="display-4 fw-bold mb-3" style="color: white !important;">
+                    <i class="fas fa-trophy me-3"></i>
+                    رتبه‌بندی {{ stage.name }}
+                </h1>
+                <p class="lead mb-4" style="color: white !important;">مقایسه عملکرد اعضا در این مرحله</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- رتبه‌بندی مرحله -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-custom rounded-custom">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-medal me-2"></i>
+                        رتبه‌بندی اعضای مرحله {{ stage.stage_number }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if rankings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="10%">رتبه</th>
+                                        <th width="30%">نام عضو</th>
+                                        <th width="20%">امتیاز مرحله</th>
+                                        <th width="20%">درصد پیشرفت</th>
+                                        <th width="20%">وضعیت</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for member in rankings %}
+                                        <tr>
+                                            <td>
+                                                <div class="rank-badge rank-{{ forloop.counter }}">
+                                                    {% if forloop.counter == 1 %}
+                                                        <i class="fas fa-crown"></i>
+                                                    {% elif forloop.counter == 2 %}
+                                                        <i class="fas fa-medal"></i>
+                                                    {% elif forloop.counter == 3 %}
+                                                        <i class="fas fa-award"></i>
+                                                    {% else %}
+                                                        {{ forloop.counter }}
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="member-info">
+                                                    <strong>{{ member.full_name }}</strong>
+                                                    {% if member.current_stage %}
+                                                        <br>
+                                                        <small class="text-muted">مرحله: {{ member.current_stage.name }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="score-display">
+                                                    <strong class="text-primary">{{ member.stage_score|default:0 }}</strong>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="progress-container">
+                                                    <div class="progress">
+                                                        <div class="progress-bar" role="progressbar" 
+                                                             style="width: {{ member.get_stage_progress_percentage }}%"
+                                                             aria-valuenow="{{ member.get_stage_progress_percentage }}" 
+                                                             aria-valuemin="0" aria-valuemax="100">
+                                                        </div>
+                                                    </div>
+                                                    <small class="text-muted">{{ member.get_stage_progress_percentage }}%</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if member.can_advance_to_next_stage %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>
+                                                        آماده پیشرفت
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        در حال مطالعه
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="mt-3 text-muted">هیچ عضوی در این مرحله وجود ندارد</h4>
+                            <p class="text-muted">لطفاً بعداً دوباره بررسی کنید.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- دکمه‌های عملیات -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'books:stage_books' stage.id %}" class="btn btn-primary me-3">
+                <i class="fas fa-books me-2"></i>
+                مشاهده کتاب‌های مرحله
+            </a>
+            <a href="{% url 'books:rankings' %}" class="btn btn-secondary me-3">
+                <i class="fas fa-trophy me-2"></i>
+                رتبه‌بندی کلی
+            </a>
+            <a href="{% url 'books:home' %}" class="btn btn-outline-primary">
+                <i class="fas fa-home me-2"></i>
+                صفحه اصلی
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rank-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.2rem;
+    }
+    
+    .rank-1 {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    }
+    
+    .rank-2 {
+        background: linear-gradient(135deg, #c0c0c0 0%, #e5e5e5 100%);
+        box-shadow: 0 4px 15px rgba(192, 192, 192, 0.4);
+    }
+    
+    .rank-3 {
+        background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%);
+        box-shadow: 0 4px 15px rgba(205, 127, 50, 0.4);
+    }
+    
+    .rank-badge:not(.rank-1):not(.rank-2):not(.rank-3) {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .member-info {
+        line-height: 1.4;
+    }
+    
+    .score-display {
+        text-align: center;
+    }
+    
+    .progress-container {
+        text-align: center;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #e9ecef;
+        margin-bottom: 0.5rem;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 4px;
+        transition: width 0.6s ease;
+    }
+    
+    .table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        padding: 1rem;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(102, 126, 234, 0.05);
+        transform: scale(1.01);
+        transition: all 0.2s ease;
+    }
+    
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+</style>
+{% endblock %}

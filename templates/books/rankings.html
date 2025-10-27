@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load jalali_tags %}
 
-{% block title %}رتبه‌بندی - کتابخانه گروهی{% endblock %}
+{% block title %}رتبه‌بندی - کتابخانه مسجد حوری{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -10,11 +11,11 @@
         <div class="row mb-5">
             <div class="col-12 text-center">
                 <div class="hero-section">
-                    <h1 class="display-4 fw-bold mb-3">
+                    <h1 class="display-4 fw-bold mb-3" style="color: white !important;">
                         <i class="fas fa-trophy me-3"></i>
                         رتبه‌بندی {{ active_period.name }}
                     </h1>
-                    <p class="lead mb-0">مقایسه عملکرد اعضا در مراحل مختلف</p>
+                    <p class="lead mb-0" style="color: white !important;">مقایسه عملکرد اعضا در مراحل مختلف</p>
                 </div>
             </div>
         </div>
@@ -31,14 +32,14 @@
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table table-rankings">
                                 <thead class="table-light">
                                     <tr>
                                         <th>رتبه</th>
                                         <th>عضو</th>
                                         <th>امتیاز کل</th>
-                                        <th>کتاب‌های تکمیل شده</th>
-                                        <th>مرحله فعلی</th>
+                                        <th class="d-none d-md-table-cell">کتاب‌های تکمیل شده</th>
+                                        <th class="d-none d-md-table-cell">مرحله فعلی</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -46,36 +47,51 @@
                                         <tr class="{% if forloop.counter <= 3 %}table-warning{% endif %}">
                                             <td>
                                                 {% if forloop.counter == 1 %}
-                                                    <span class="badge bg-warning text-dark fs-6">🥇</span>
+                                                    <span class="badge bg-warning text-dark fs-6 fw-bold">🥇</span>
                                                 {% elif forloop.counter == 2 %}
-                                                    <span class="badge bg-secondary fs-6">🥈</span>
+                                                    <span class="badge bg-secondary fs-6 fw-bold">🥈</span>
                                                 {% elif forloop.counter == 3 %}
-                                                    <span class="badge bg-warning text-dark fs-6">🥉</span>
+                                                    <span class="badge bg-warning text-dark fs-6 fw-bold">🥉</span>
                                                 {% else %}
-                                                    <span class="badge bg-light text-dark">{{ forloop.counter }}</span>
+                                                    <span class="badge bg-light text-dark fw-bold">{{ forloop.counter|to_persian_number }}</span>
                                                 {% endif %}
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                                        <i class="fas fa-user text-primary"></i>
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 40px; height: 40px; min-width: 40px; overflow: hidden; background: #f0f0f0;">
+                                                        {% if member.profile_image %}
+                                                            <img src="{{ member.profile_image.url }}" alt="{{ member.full_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                        {% else %}
+                                                            <i class="fas fa-user text-primary"></i>
+                                                        {% endif %}
                                                     </div>
                                                     <div>
                                                         <h6 class="mb-0 fw-bold">{{ member.full_name }}</h6>
-                                                        <a href="{% url 'books:member_progress' member.id %}" class="btn btn-sm btn-outline-primary">
-                                                            <i class="fas fa-eye me-1"></i>
-                                                            مشاهده پیشرفت
-                                                        </a>
+                                                        <small class="text-muted">{{ member.get_group_display }}</small>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="badge bg-success fs-6">{{ member.total_score }}</span>
+                                                <div>
+                                                    <span class="badge bg-success fs-6 fw-bold">{{ member.total_score|to_persian_number }}</span>
+                                                    <div class="d-md-none mt-2">
+                                                        <small class="text-muted d-block">
+                                                            <i class="fas fa-book me-1"></i>
+                                                            {{ member.total_books_completed|to_persian_number }} کتاب
+                                                        </small>
+                                                        {% if member.current_stage %}
+                                                            <small class="text-muted d-block mt-1">
+                                                                <i class="fas fa-layer-group me-1"></i>
+                                                                {{ member.current_stage.name }}
+                                                            </small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
                                             </td>
-                                            <td>
-                                                <span class="badge bg-info">{{ member.total_books_completed }}</span>
+                                            <td class="d-none d-md-table-cell">
+                                                <span class="badge bg-info fw-bold">{{ member.total_books_completed|to_persian_number }}</span>
                                             </td>
-                                            <td>
+                                            <td class="d-none d-md-table-cell">
                                                 {% if member.current_stage %}
                                                     <span class="badge bg-primary">{{ member.current_stage.name }}</span>
                                                 {% else %}
@@ -128,20 +144,20 @@
                                                 <tr>
                                                     <td>
                                                         {% if forloop.counter == 1 %}
-                                                            <span class="badge bg-warning text-dark">🥇</span>
+                                                            <span class="badge bg-warning text-dark fw-bold">🥇</span>
                                                         {% elif forloop.counter == 2 %}
-                                                            <span class="badge bg-secondary">🥈</span>
+                                                            <span class="badge bg-secondary fw-bold">🥈</span>
                                                         {% elif forloop.counter == 3 %}
-                                                            <span class="badge bg-warning text-dark">🥉</span>
+                                                            <span class="badge bg-warning text-dark fw-bold">🥉</span>
                                                         {% else %}
-                                                            <span class="badge bg-light text-dark">{{ forloop.counter }}</span>
+                                                            <span class="badge bg-light text-dark fw-bold">{{ forloop.counter|to_persian_number }}</span>
                                                         {% endif %}
                                                     </td>
                                                     <td>
-                                                        <small class="fw-bold">{{ member.user.get_full_name|default:member.user.username }}</small>
+                                                        <small class="fw-bold" style="white-space: nowrap;">{{ member.user.get_full_name|default:member.user.username }}</small>
                                                     </td>
                                                     <td>
-                                                        <span class="badge bg-success">{{ member.stage_score|default:0 }}</span>
+                                                        <span class="badge bg-success fw-bold">{{ member.stage_score|default:0|to_persian_number }}</span>
                                                     </td>
                                                 </tr>
                                             {% endfor %}

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.contrib.auth.models import User
 from datetime import timedelta
 
 class ReadingPeriod(models.Model):
@@ -38,6 +39,7 @@ class Stage(models.Model):
     stage_number = models.IntegerField(verbose_name="شماره مرحله")
     name = models.CharField(max_length=100, verbose_name="نام مرحله")
     description = models.TextField(verbose_name="توضیحات")
+    image = models.ImageField(upload_to='stages/images/', blank=True, null=True, verbose_name="تصویر مرحله")
     order = models.IntegerField(verbose_name="ترتیب")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -77,9 +79,17 @@ class Book(models.Model):
         return self.reading_score + self.quiz_score
 
 class Member(models.Model):
-    """عضو گروه (بدون یوزر)"""
+    """عضو گروه"""
+    GROUP_CHOICES = [
+        ('soleimani', 'گروه شهید سلیمانی'),
+        ('fakhrizadeh', 'گروه شهید فخری زاده'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, verbose_name="کاربر")
     first_name = models.CharField(max_length=100, verbose_name="نام", null=True, blank=True)
     last_name = models.CharField(max_length=100, verbose_name="نام خانوادگی", null=True, blank=True)
+    group = models.CharField(max_length=20, choices=GROUP_CHOICES, default='fakhrizadeh', verbose_name="گروه")
+    profile_image = models.ImageField(upload_to='members/profiles/', blank=True, null=True, verbose_name="تصویر پروفایل")
     current_stage = models.ForeignKey(Stage, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="مرحله فعلی")
     total_score = models.IntegerField(default=0, verbose_name="امتیاز کل")
     is_active = models.BooleanField(default=True, verbose_name="فعال")
@@ -92,11 +102,59 @@ class Member(models.Model):
         ordering = ['-total_score', 'first_name']
 
     def __str__(self):
+        if self.user:
+            return f"{self.user.first_name} {self.user.last_name}" if self.user.first_name else self.user.username
         return f"{self.first_name} {self.last_name}"
 
     @property
     def full_name(self):
+        if self.user:
+            return f"{self.user.first_name} {self.user.last_name}" if self.user.first_name else self.user.username
         return f"{self.first_name} {self.last_name}"
+    
+    def has_user_account(self):
+        """آیا عضو حساب کاربری دارد؟"""
+        return self.user is not None
+    
+    def create_user_account(self, username, password, email=None):
+        """ایجاد حساب کاربری برای عضو"""
+        if self.user:
+            return False, "این عضو قبلاً حساب کاربری دارد"
+        
+        try:
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email or '',
+                first_name=self.first_name or '',
+                last_name=self.last_name or ''
+            )
+            self.user = user
+            self.save()
+            return True, "حساب کاربری با موفقیت ایجاد شد"
+        except Exception as e:
+            return False, f"خطا در ایجاد حساب کاربری: {str(e)}"
+    
+    def update_user_info(self, first_name=None, last_name=None, email=None):
+        """به‌روزرسانی اطلاعات کاربر"""
+        if not self.user:
+            return False, "این عضو حساب کاربری ندارد"
+        
+        try:
+            if first_name is not None:
+                self.user.first_name = first_name
+                self.first_name = first_name
+            if last_name is not None:
+                self.user.last_name = last_name
+                self.last_name = last_name
+            if email is not None:
+                self.user.email = email
+            
+            self.user.save()
+            self.save()
+            return True, "اطلاعات با موفقیت به‌روزرسانی شد"
+        except Exception as e:
+            return False, f"خطا در به‌روزرسانی: {str(e)}"
 
     def get_current_stage_books(self):
         """کتاب‌های مرحله فعلی"""
@@ -155,10 +213,10 @@ class Member(models.Model):
         return False
 
 class BookAssignment(models.Model):
-    """تخصیص کتاب به عضو"""
+    """امانت گرفتن کتاب توسط عضو"""
     member = models.ForeignKey(Member, on_delete=models.CASCADE, verbose_name="عضو")
     book = models.ForeignKey(Book, on_delete=models.CASCADE, verbose_name="کتاب")
-    assigned_date = models.DateTimeField(verbose_name="تاریخ تخصیص")
+    assigned_date = models.DateTimeField(verbose_name="تاریخ امانت گرفتن")
     due_date = models.DateTimeField(verbose_name="تاریخ موعد")
     returned_date = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ بازگشت")
     is_completed = models.BooleanField(default=False, verbose_name="تکمیل شده")
@@ -168,8 +226,8 @@ class BookAssignment(models.Model):
     notes = models.TextField(blank=True, verbose_name="یادداشت‌ها")
 
     class Meta:
-        verbose_name = "تخصیص کتاب"
-        verbose_name_plural = "تخصیص‌های کتاب"
+        verbose_name = "امانت گرفتن کتاب"
+        verbose_name_plural = "امانت‌های کتاب"
         ordering = ['-assigned_date']
 
     def __str__(self):
@@ -191,7 +249,7 @@ class BookAssignment(models.Model):
         return self.book.reading_score
 
     def complete_assignment(self, quiz_score, notes=""):
-        """تکمیل تخصیص کتاب"""
+        """تکمیل امانت گرفتن کتاب"""
         self.returned_date = timezone.now()
         self.quiz_score_earned = quiz_score
         self.reading_score_earned = self.calculate_late_penalty()
@@ -200,9 +258,44 @@ class BookAssignment(models.Model):
         self.save()
         
         # به‌روزرسانی امتیاز کل عضو
-        self.member.total_score += self.reading_score_earned + self.quiz_score_earned
+        earned_score = self.reading_score_earned + self.quiz_score_earned
+        self.member.total_score += earned_score
         self.member.save()
+        
+        # به‌روزرسانی امتیاز هفتگی
+        from datetime import date, timedelta
+        today = date.today()
+        # محاسبه شروع هفته (شنبه)
+        days_since_saturday = (today.weekday() + 2) % 7
+        week_start = today - timedelta(days=days_since_saturday)
+        week_end = week_start + timedelta(days=6)
+        
+        weekly_score, created = WeeklyScore.objects.get_or_create(
+            member=self.member,
+            week_start_date=week_start,
+            defaults={'week_end_date': week_end, 'weekly_score': 0}
+        )
+        weekly_score.weekly_score += earned_score
+        weekly_score.save()
         
         # بررسی پیشرفت به مرحله بعد
         if self.member.can_advance_to_next_stage():
             self.member.advance_to_next_stage()
+
+class WeeklyScore(models.Model):
+    """امتیاز هفتگی اعضا"""
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, verbose_name="عضو", related_name='weekly_scores')
+    week_start_date = models.DateField(verbose_name="تاریخ شروع هفته")
+    week_end_date = models.DateField(verbose_name="تاریخ پایان هفته")
+    weekly_score = models.IntegerField(default=0, verbose_name="امتیاز هفتگی")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "امتیاز هفتگی"
+        verbose_name_plural = "امتیازات هفتگی"
+        ordering = ['-weekly_score', '-week_start_date']
+        unique_together = ['member', 'week_start_date']
+
+    def __str__(self):
+        return f"{self.member.full_name} - هفته {self.week_start_date}"

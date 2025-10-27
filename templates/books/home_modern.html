@@ -1,0 +1,381 @@
+{% extends 'base_modern.html' %}
+{% load static %}
+{% load jalali_tags %}
+
+{% block title %}صفحه اصلی - کتابخانه مسجد حوری{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    {% if user.is_authenticated and show_welcome %}
+        <!-- Welcome Message -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-success modern-alert alert-dismissible fade show" role="alert">
+                    <i class="fas fa-user-check me-2"></i>
+                    <strong>خوش آمدید آقا {{ user.first_name|default:user.username }}!</strong><br>
+                    شما با موفقیت وارد صفحه کتابخوانی خود شدید. پیش به سوی سربازی امام زمان 🤗
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    {% if active_period %}
+        <!-- Vertical Image Slider -->
+        <div class="vertical-slider-container mb-4">
+            <div class="vertical-slider" id="verticalSlider">
+                <div class="slider-item active">
+                    <img src="/media/IMG_۲۰۲۵۰۹۱۲_۱۶۵۴۴۸_۵۸۶.jpg" alt="اسلاید 1">
+                    <div class="slider-overlay">
+                        <h3>دوره کتابخوانی شهید چمران</h3>
+                        <p>پیش به سوی سربازی امام زمان (عج)</p>
+                    </div>
+                </div>
+                <div class="slider-item">
+                    <img src="/media/IMG_20251026_205308.jpg" alt="اسلاید 2">
+                    <div class="slider-overlay">
+                        <h3>کتابخانه مسجد حوری</h3>
+                        <p>گروه شهیدان فخری زاده و سلیمانی</p>
+                    </div>
+                </div>
+                <div class="slider-item">
+                    <img src="/media/IMG_20251026_205327.jpg" alt="اسلاید 3">
+                    <div class="slider-overlay">
+                        <h3>کتابخوانی گروهی</h3>
+                        <p>همراه با رفقای مسجدی</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation Dots -->
+            <div class="slider-dots">
+                <span class="dot active" onclick="goToSlide(0)"></span>
+                <span class="dot" onclick="goToSlide(1)"></span>
+                <span class="dot" onclick="goToSlide(2)"></span>
+            </div>
+            
+            <!-- Navigation Arrows -->
+            <button class="slider-arrow arrow-left" onclick="previousSlide()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="slider-arrow arrow-right" onclick="nextSlide()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-number" data-target="{{ total_members }}" data-persian="{{ total_members|to_persian_number }}">۰</div>
+                <div class="stat-label">عضو فعال</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #A855F7, #7C3AED);">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stat-number" data-target="{{ total_books }}" data-persian="{{ total_books|to_persian_number }}">۰</div>
+                <div class="stat-label">کتاب</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #34D399, #0EA5E9);">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-number" data-target="{{ completed_books }}" data-persian="{{ completed_books|to_persian_number }}">۰</div>
+                <div class="stat-label">کتاب خوانده شده</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #FFC947, #EF6C00);">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="stat-number" data-target="{{ stages.count }}" data-persian="{{ stages.count|to_persian_number }}">۰</div>
+                <div class="stat-label">مرحله</div>
+            </div>
+        </div>
+
+        <!-- Stages Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="text-center mb-4">
+                    <i class="fas fa-layer-group text-primary me-2"></i>
+                    مراحل دوره
+                </h2>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="gradient-hero">
+            <h1 class="display-4 fw-bold mb-3" style="white-space: nowrap;">{{ active_period.name }}</h1>
+            <h3 class="mb-2">گروه شهید فخری زاده</h3>
+            <h3 class="mb-4">گروه شهید سلیمانی</h3>
+            <div class="description-wrapper">
+                <p class="lead mb-0 description-text" id="descriptionText">{{ active_period.description }}</p>
+                <button class="description-toggle" id="descriptionToggle" onclick="toggleDescription()">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {% for stage in stages %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="modern-card">
+                        {% if stage.image %}
+                            <div class="mb-3" style="border-radius: 16px; overflow: hidden;">
+                                <img src="{{ stage.image.url }}" alt="{{ stage.name }}" 
+                                     class="img-fluid" 
+                                     style="width: 100%; height: 200px; object-fit: cover;">
+                            </div>
+                        {% endif %}
+                        <div class="text-center mb-3">
+                            <div class="stat-icon d-inline-flex" style="width: 56px; height: 56px; font-size: 1.5rem;">
+                                {{ stage.stage_number|to_persian_number }}
+                            </div>
+                        </div>
+                        <h4 class="fw-bold text-center mb-3 text-gradient">{{ stage.name }}</h4>
+                        <p class="text-muted text-center mb-4">{{ stage.description|truncatewords:15 }}</p>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'books:stage_books' stage.id %}" class="btn btn-modern btn-gradient">
+                                <i class="fas fa-book me-2"></i>
+                                مشاهده کتاب‌ها
+                            </a>
+                            <a href="{% url 'books:stage_rankings' stage.id %}" class="btn btn-modern" style="background: white; color: var(--primary); border: 2px solid var(--primary);">
+                                <i class="fas fa-trophy me-2"></i>
+                                رتبه‌بندی مرحله
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="modern-card">
+                    <h3 class="mb-4 text-center">
+                        <i class="fas fa-bolt me-2 text-primary"></i>
+                        اقدامات سریع
+                    </h3>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="{% url 'books:rankings' %}" class="btn btn-modern btn-gradient w-100">
+                                <i class="fas fa-trophy me-2"></i>
+                                رتبه‌بندی کلی
+                            </a>
+                        </div>
+                        {% if user.is_staff %}
+                            <div class="col-md-4">
+                                <a href="{% url 'books:admin_member_progress' %}" class="btn btn-modern w-100" style="background: linear-gradient(90deg, #34D399, #0EA5E9); color: white;">
+                                    <i class="fas fa-users me-2"></i>
+                                    وضعیت اعضا
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="col-md-4">
+                                <a href="{% url 'books:user_progress' %}" class="btn btn-modern w-100" style="background: linear-gradient(90deg, #34D399, #0EA5E9); color: white;">
+                                    <i class="fas fa-user me-2"></i>
+                                    وضعیت من
+                                </a>
+                            </div>
+                        {% endif %}
+                        <div class="col-md-4">
+                            <button class="btn btn-modern w-100" style="background: linear-gradient(90deg, #A855F7, #7C3AED); color: white;" onclick="showHelp()">
+                                <i class="fas fa-question-circle me-2"></i>
+                                راهنما
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- No Active Period -->
+        <div class="row">
+            <div class="col-lg-6 mx-auto">
+                <div class="modern-card text-center">
+                    <i class="fas fa-book-open text-muted" style="font-size: 4rem;"></i>
+                    <h2 class="mt-3 mb-3">دوره فعالی یافت نشد</h2>
+                    <p class="text-muted mb-4">در حال حاضر هیچ دوره کتابخوانی فعالی وجود ندارد.</p>
+                    {% if user.is_staff %}
+                        <a href="{% url 'admin:books_readingperiod_add' %}" class="btn btn-modern btn-gradient">
+                            <i class="fas fa-plus me-2"></i>
+                            ایجاد دوره جدید
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: 24px; border: none;">
+            <div class="modal-header" style="background: linear-gradient(90deg, var(--primary), var(--primary-light)); color: white; border-radius: 24px 24px 0 0;">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle me-2"></i>
+                    راهنمای استفاده
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="fw-bold text-primary mb-3">امکانات سیستم:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                مشاهده کتاب‌های مرحله فعلی
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                پیگیری پیشرفت شخصی
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                مشاهده رتبه‌بندی
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showHelp() {
+    new bootstrap.Modal(document.getElementById('helpModal')).show();
+}
+
+function toggleDescription() {
+    const descText = document.getElementById('descriptionText');
+    const toggleBtn = document.getElementById('descriptionToggle');
+    const icon = toggleBtn.querySelector('i');
+    
+    descText.classList.toggle('expanded');
+    
+    if (descText.classList.contains('expanded')) {
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+    } else {
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+    }
+}
+
+// Counter Animation with Persian numbers
+function animateCounter(element) {
+    const target = parseInt(element.getAttribute('data-target'));
+    const persianTarget = element.getAttribute('data-persian');
+    const duration = 1500; // 1.5 seconds
+    const steps = 60;
+    const stepTime = duration / steps;
+    const increment = target / steps;
+    let current = 0;
+    
+    const toPersian = (num) => {
+        const persian = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+        return String(num).split('').map(d => persian[parseInt(d)] || d).join('');
+    };
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+            element.textContent = persianTarget;
+            clearInterval(timer);
+        } else {
+            element.textContent = toPersian(Math.ceil(current));
+        }
+    }, stepTime);
+}
+
+// Start all counters together when stats come into view
+document.addEventListener('DOMContentLoaded', function() {
+    const statsGrid = document.querySelector('.stats-grid');
+    let hasAnimated = false;
+    
+    if (statsGrid) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !hasAnimated) {
+                    hasAnimated = true;
+                    const statNumbers = document.querySelectorAll('.stat-number');
+                    statNumbers.forEach(stat => {
+                        setTimeout(() => animateCounter(stat), 100);
+                    });
+                }
+            });
+        }, { threshold: 0.3 });
+        
+        observer.observe(statsGrid);
+    }
+});
+
+// Vertical Slider
+let currentSlide = 0;
+const slides = document.querySelectorAll('.slider-item');
+const dots = document.querySelectorAll('.dot');
+const totalSlides = slides.length;
+
+function showSlide(index) {
+    // Remove active class from all
+    slides.forEach(slide => slide.classList.remove('active'));
+    dots.forEach(dot => dot.classList.remove('active'));
+    
+    // Add active class to current
+    slides[index].classList.add('active');
+    dots[index].classList.add('active');
+}
+
+function nextSlide() {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    showSlide(currentSlide);
+}
+
+function previousSlide() {
+    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+    showSlide(currentSlide);
+}
+
+function goToSlide(index) {
+    currentSlide = index;
+    showSlide(currentSlide);
+}
+
+// Auto slide every 5 seconds
+setInterval(nextSlide, 5000);
+
+// Swipe support for mobile
+let touchStartY = 0;
+let touchEndY = 0;
+
+const slider = document.getElementById('verticalSlider');
+
+slider.addEventListener('touchstart', function(e) {
+    touchStartY = e.changedTouches[0].screenY;
+}, false);
+
+slider.addEventListener('touchend', function(e) {
+    touchEndY = e.changedTouches[0].screenY;
+    handleSwipe();
+}, false);
+
+function handleSwipe() {
+    if (touchEndY < touchStartY - 50) {
+        nextSlide();
+    }
+    if (touchEndY > touchStartY + 50) {
+        previousSlide();
+    }
+}
+</script>
+{% endblock %}
+
