@@ -565,6 +565,8 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
     
     transition: all 0.3s ease;
 }
@@ -602,6 +604,10 @@ body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-wrap: wrap;
+    max-width: 100%;
+    flex: 1 1 auto;
+    justify-content: center;
 }
 
 .logo-icon {
@@ -629,11 +635,177 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    white-space: nowrap;
+    white-space: normal;
+    line-height: 1.2;
+    max-width: min(320px, 70vw);
+    text-align: center;
 }
 
 .header-spacer {
     flex: 1;
+}
+
+.header-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.btn-notification {
+    position: relative;
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+    text-decoration: none;
+}
+
+.btn-notification:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+}
+
+.btn-notification.has-unread {
+    animation: shake 0.5s ease-in-out infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px) rotate(-3deg); }
+    20%, 40%, 60%, 80% { transform: translateX(2px) rotate(3deg); }
+}
+
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 999px;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.notifications-menu {
+    min-width: 320px;
+    max-width: 360px;
+    max-height: 420px;
+    padding: 0;
+    border-radius: 18px;
+    border: none;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.92) 0%, rgba(17, 24, 39, 0.85) 100%);
+    box-shadow: 0 25px 55px rgba(15, 23, 42, 0.45);
+}
+
+.notifications-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.1rem;
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    color: #fff;
+    font-weight: 700;
+}
+
+.notifications-menu-header a {
+    color: rgba(255,255,255,0.92);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.notifications-menu-body {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.notification-entry {
+    display: flex;
+    gap: 12px;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 0.85rem;
+    transition: all 0.25s ease;
+}
+
+.notification-entry:last-child {
+    margin-bottom: 0;
+}
+
+.notification-entry.unread {
+    background: rgba(56, 239, 125, 0.16);
+    border-color: rgba(56, 239, 125, 0.3);
+}
+
+.notification-entry-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(56, 239, 125, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0d9488;
+    flex-shrink: 0;
+}
+
+.notification-entry-content h6 {
+    font-weight: 700;
+    color: #f9fafb;
+    margin-bottom: 0.35rem;
+}
+
+.notification-entry-content p {
+    font-size: 0.85rem;
+    color: rgba(229, 231, 235, 0.85);
+}
+
+.notification-empty {
+    padding: 2rem 1rem;
+}
+
+.notification-empty i {
+    font-size: 1.8rem;
+    display: block;
+    color: #9ca3af;
+}
+
+.notification-entry:hover {
+    transform: translateY(-2px);
+    background: rgba(56, 239, 125, 0.22);
+    border-color: rgba(56, 239, 125, 0.4);
+    box-shadow: 0 12px 30px rgba(17, 153, 142, 0.18);
+}
+
+.entry-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: rgba(203, 213, 225, 0.9) !important;
+    margin-bottom: 0.35rem;
+}
+
+.entry-meta::before {
+    content: '\f017';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
 }
 
 /* Mobile Responsive */

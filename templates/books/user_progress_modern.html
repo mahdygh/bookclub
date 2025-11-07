@@ -34,7 +34,10 @@
                 <div class="text-start">
                     <h2 class="mb-2 fw-bold">{{ member.full_name }}</h2>
                     <p class="mb-2">{{ member.get_group_display }}</p>
-                    <span class="badge-modern badge-success-large">امتیاز کل: {{ member.total_score|to_persian_number }}</span>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge-modern badge-success-large">امتیاز کل: {{ member.total_score|to_persian_number }}</span>
+                        <span class="badge-modern badge-info-large">صفحات مطالعه شده: {{ total_pages_read|to_persian_number }}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -137,6 +140,9 @@
                                             <div class="d-flex gap-2">
                                                 <span class="badge-modern badge-success-sm">{{ book_info.score|to_persian_number }} امتیاز</span>
                                                 <small class="text-muted">{{ book_info.returned_date|to_jalali }}</small>
+                                                {% if book_info.pages %}
+                                                    <span class="badge-modern badge-pages-sm">{{ book_info.pages|to_persian_number }} صفحه</span>
+                                                {% endif %}
                                             </div>
                                         </div>
                                         <div class="book-icon">
@@ -336,6 +342,16 @@
     box-shadow: 0 4px 15px rgba(52, 211, 153, 0.3);
 }
 
+.badge-info-large {
+    background: linear-gradient(135deg, #38bdf8, #2563eb);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+}
+
 .stage-card {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(249, 250, 251, 0.95));
     border: 2px solid rgba(52, 211, 153, 0.2);
@@ -425,6 +441,15 @@
 
 .badge-success-sm {
     background: linear-gradient(135deg, #34D399, #10B981);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.badge-pages-sm {
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
     color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 20px;

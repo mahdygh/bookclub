@@ -1,4 +1,5 @@
 {% load static %}
+{% load jalali_tags %}
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -119,16 +120,23 @@
         <div class="main-content">
             <!-- Modern Header -->
             <header class="modern-header">
-                <button class="header-menu-btn d-lg-none" id="headerSidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
-            <div class="header-logo">
-                <div class="logo-icon">
-                    <img src="/media/logo.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;">
+                <div class="header-controls">
+                    <button class="header-menu-btn" id="headerSidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'books:notifications' %}" class="header-menu-btn btn-notification {% if header_unread_notifications %}has-unread{% endif %}" id="notificationBtn">
+                        <i class="fas fa-bell"></i>
+                    </a>
+                    {% endif %}
                 </div>
-                <span class="header-title">هیچ چیز جای کتاب را پر نمی کند!</span>
-            </div>
+
+                <div class="header-logo">
+                    <div class="logo-icon">
+                        <img src="/media/logo.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;">
+                    </div>
+                    <span class="header-title">هیچ چیز جای کتاب را پر نمی کند!</span>
+                </div>
                 
                 <div class="header-spacer"></div>
             </header>

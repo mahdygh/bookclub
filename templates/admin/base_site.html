@@ -8,11 +8,22 @@
 {% endblock %}
 
 {% block branding %}
-<h1 id="site-name">
-    <a href="{% url 'admin:index' %}">
-        📚 پنل مدیریت کتابخانه
+<div class="admin-branding-wrapper">
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">
+            📚 پنل مدیریت کتابخانه
+        </a>
+    </h1>
+</div>
+<div class="admin-action-toolbar">
+    <a class="button admin-action-button" href="{% url 'admin:books_bookassignment_add' %}">
+        + امانت کتاب جدید
     </a>
-</h1>
+</div>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
+
+{% block usertools %}
+    {{ block.super }}
+{% endblock %}

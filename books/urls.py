@@ -17,6 +17,9 @@ urlpatterns = [
     path('return-book/', views.return_book, name='return_book'),
     path('member-progress/', views.admin_member_progress, name='admin_member_progress'),
     path('my-progress/', views.user_progress, name='user_progress'),
+    path('notifications/', views.notifications_list, name='notifications'),
+    path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='notification_read'),
+    path('notifications/<int:notification_id>/delete/', views.delete_notification, name='notification_delete'),
     path('api/member/<int:member_id>/details/', views.api_member_details, name='api_member_details'),
     path('api/rankings/', views.api_rankings, name='api_rankings'),
 ]

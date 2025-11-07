@@ -1,0 +1,59 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<div id="content" class="dashboard collapsible-dashboard">
+    <div class="dashboard-header">
+        <h1>{{ title }}</h1>
+    </div>
+
+    {% if app_list %}
+        <div class="app-grid">
+            {% for app in app_list %}
+                <details class="app-card" data-app-label="{{ app.app_label }}">
+                    <summary>
+                        <span class="app-title">{{ app.name }}</span>
+                        <span class="app-count">{{ app.models|length }}</span>
+                    </summary>
+                    <div class="module">
+                        <ul class="model-list">
+                            {% for model in app.models %}
+                                <li>
+                                    {% if model.admin_url %}
+                                        <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                                    {% else %}
+                                        {{ model.name }}
+                                    {% endif %}
+                                    {% if model.add_url %}
+                                        <a class="add-link" href="{{ model.add_url }}" title="افزودن رکورد جدید">+</a>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </details>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>{% trans 'هیچ اپی برای نمایش وجود ندارد.' %}</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const collapseLabels = ['books', 'members', 'auth'];
+            document.querySelectorAll('.app-card').forEach(function(card) {
+                const label = (card.dataset.appLabel || '').toLowerCase();
+                if (!collapseLabels.includes(label)) {
+                    card.setAttribute('open', 'open');
+                }
+            });
+        });
+    </script>
+{% endblock %}
+

@@ -1,262 +1,432 @@
-{% extends 'base.html' %}
+{% extends 'base_modern.html' %}
 {% load static %}
+{% load jalali_tags %}
 
 {% block title %}{{ book.title }} - کتابخانه مسجد حوری{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Header -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="hero-section text-center">
-                <h1 class="display-4 fw-bold mb-3" style="color: white !important;">
-                    <i class="fas fa-book me-3"></i>
-                    {{ book.title }}
-                </h1>
-                <p class="lead mb-4" style="color: white !important;">نویسنده: {{ book.author }}</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- تصویر و اطلاعات کتاب -->
-        <div class="col-lg-4 mb-4">
-            <div class="card">
-                {% if book.cover_image %}
-                    <img src="{{ book.cover_image.url }}" class="card-img-top book-detail-cover" alt="{{ book.title }}">
-                {% else %}
-                    <div class="book-detail-placeholder">
-                        <i class="fas fa-book fa-5x text-muted"></i>
-                    </div>
-                {% endif %}
-                <div class="card-body text-center">
-                    <h5 class="card-title">{{ book.title }}</h5>
-                    <p class="card-text text-muted">{{ book.author }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- جزئیات کتاب -->
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        اطلاعات کتاب
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <h6 class="text-muted">عنوان کتاب</h6>
-                                <p class="fw-bold">{{ book.title }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <h6 class="text-muted">نویسنده</h6>
-                                <p class="fw-bold">{{ book.author }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <h6 class="text-muted">مرحله</h6>
-                                <p class="fw-bold">{{ book.stage.name }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <h6 class="text-muted">تعداد روز مطالعه</h6>
-                                <p class="fw-bold">{{ book.reading_days }} روز</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="score-card">
-                                <div class="score-icon">
-                                    <i class="fas fa-book-open"></i>
-                                </div>
-                                <div class="score-info">
-                                    <h6 class="text-muted">امتیاز مطالعه</h6>
-                                    <h4 class="text-primary">{{ book.reading_score }}</h4>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="score-card">
-                                <div class="score-icon">
-                                    <i class="fas fa-question-circle"></i>
-                                </div>
-                                <div class="score-info">
-                                    <h6 class="text-muted">امتیاز آزمون</h6>
-                                    <h4 class="text-success">{{ book.quiz_score }}</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <h6 class="text-muted">توضیحات</h6>
-                        <p class="text-justify">{{ book.description }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- امانت‌های کتاب -->
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="mb-0">
-                        <i class="fas fa-users me-2"></i>
-                        امانت‌های این کتاب
-                    </h3>
-                </div>
-                <div class="card-body">
-                    {% if assignments %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>عضو</th>
-                                        <th>تاریخ امانت</th>
-                                        <th>تاریخ موعد</th>
-                                        <th>وضعیت</th>
-                                        <th>امتیاز کسب شده</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for assignment in assignments %}
-                                        <tr>
-                                            <td>
-                                                <strong>{{ assignment.member.full_name }}</strong>
-                                            </td>
-                                            <td>{{ assignment.assigned_date|date:"Y/m/d" }}</td>
-                                            <td>{{ assignment.due_date|date:"Y/m/d" }}</td>
-                                            <td>
-                                                {% if assignment.is_completed %}
-                                                    <span class="badge bg-success">
-                                                        <i class="fas fa-check me-1"></i>
-                                                        تکمیل شده
-                                                    </span>
-                                                {% else %}
-                                                    <span class="badge bg-warning">
-                                                        <i class="fas fa-clock me-1"></i>
-                                                        در حال مطالعه
-                                                    </span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if assignment.is_completed %}
-                                                    <strong class="text-success">
-                                                        {{ assignment.reading_score_earned|add:assignment.quiz_score_earned }}
-                                                    </strong>
-                                                {% else %}
-                                                    <span class="text-muted">-</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+<div class="container-fluid book-detail-wrapper">
+    <div class="gradient-hero mb-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-4 text-center">
+                <div class="book-cover-shell">
+                    {% if book.cover_image %}
+                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="book-cover-img">
                     {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-book-open text-muted" style="font-size: 3rem;"></i>
-                            <h5 class="mt-3 text-muted">هنوز کسی این کتاب را امانت نگرفته است</h5>
+                        <div class="book-cover-placeholder">
+                            <i class="fas fa-book fa-4x text-muted"></i>
                         </div>
                     {% endif %}
                 </div>
             </div>
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-3">
+                    <i class="fas fa-book-open me-3"></i>
+                    {{ book.title }}
+                </h1>
+                <p class="lead mb-3">
+                    <i class="fas fa-user-edit me-2"></i>
+                    {{ book.author }}
+                </p>
+                <div class="badge-group">
+                    <span class="badge-modern badge-primary"><i class="fas fa-layer-group me-1"></i>{{ book.stage.name }}</span>
+                    <span class="badge-modern badge-info"><i class="fas fa-calendar-alt me-1"></i>{{ book.reading_days }} روز مطالعه</span>
+                    <span class="badge-modern badge-success"><i class="fas fa-file-alt me-1"></i>{% if book.page_count %}{{ book.page_count }} صفحه{% else %}تعداد صفحات نامشخص{% endif %}</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- دکمه‌های عملیات -->
-    <div class="row mt-4">
-        <div class="col-12 text-center">
-            <a href="{% url 'books:stage_books' book.stage.id %}" class="btn btn-secondary me-3">
-                <i class="fas fa-arrow-right me-2"></i>
-                بازگشت به مرحله
-            </a>
-            <a href="{% url 'books:home' %}" class="btn btn-primary">
-                <i class="fas fa-home me-2"></i>
-                صفحه اصلی
-            </a>
+    <div class="row g-4">
+        <div class="col-12 col-xl-4">
+            <div class="modern-card h-100 text-center">
+                <h3 class="mb-4">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    اطلاعات کتاب
+                </h3>
+                <ul class="info-list">
+                    <li>
+                        <span>عنوان کتاب</span>
+                        <strong>{{ book.title }}</strong>
+                    </li>
+                    <li>
+                        <span>نویسنده</span>
+                        <strong>{{ book.author }}</strong>
+                    </li>
+                    <li>
+                        <span>مرحله</span>
+                        <strong>{{ book.stage.name }}</strong>
+                    </li>
+                    <li>
+                        <span>تعداد روز مطالعه</span>
+                        <strong>{{ book.reading_days }} روز</strong>
+                    </li>
+                    <li>
+                        <span>تعداد صفحات</span>
+                        <strong>{% if book.page_count %}{{ book.page_count }} صفحه{% else %}نامشخص{% endif %}</strong>
+                    </li>
+                    <li>
+                        <span>تعداد نسخه</span>
+                        <strong>{{ book.stock_count }} نسخه</strong>
+                    </li>
+                    <li>
+                        <span>نسخه‌های آزاد</span>
+                        <strong>{{ available_copies }} نسخه</strong>
+                    </li>
+                </ul>
+                <div class="score-strip mt-4">
+                    <div class="score-chip reading">
+                        <span>امتیاز مطالعه</span>
+                        <strong>{{ book.reading_score }}</strong>
+                    </div>
+                    <div class="score-chip quiz">
+                        <span>امتیاز آزمون</span>
+                        <strong>{{ book.quiz_score }}</strong>
+                    </div>
+                </div>
+            </div>
         </div>
+        <div class="col-12 col-xl-8">
+            <div class="modern-card h-100">
+                <h3 class="mb-3">
+                    <i class="fas fa-align-right me-2 text-success"></i>
+                    خلاصه داستان / توضیحات
+                </h3>
+                <p class="description-text">{{ book.description|default:'توضیحاتی برای این کتاب ثبت نشده است.' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modern-card mt-5">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+            <div class="d-flex align-items-center gap-3">
+                <h3 class="mb-0">
+                    <i class="fas fa-users me-2 text-primary"></i>
+                    امانت‌های این کتاب
+                </h3>
+                <span class="badge-modern badge-secondary">
+                    <i class="fas fa-counter me-1"></i>
+                    {{ assignments|length }} امانت ثبت شده
+                </span>
+            </div>
+            {% if assignments %}
+            <button class="btn btn-toggle-assignments collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#assignmentsCollapse" aria-expanded="false" aria-controls="#assignmentsCollapse">
+                <i class="fas fa-chevron-up"></i>
+                مشاهده فهرست
+            </button>
+            {% endif %}
+        </div>
+        {% if assignments %}
+            <div class="collapse" id="assignmentsCollapse">
+                <div class="assignment-grid">
+                    {% for assignment in assignments %}
+                        <div class="assignment-card">
+                            <div class="assignment-header">
+                                <div class="member-avatar">
+                                    {% if assignment.member.profile_image %}
+                                        <img src="{{ assignment.member.profile_image.url }}" alt="{{ assignment.member.full_name }}">
+                                    {% else %}
+                                        <i class="fas fa-user"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ assignment.member.full_name }}</h5>
+                                    <small class="text-muted">{{ assignment.member.get_group_display }}</small>
+                                </div>
+                            </div>
+                            <div class="assignment-body">
+                                <div>
+                                    <span class="label">تاریخ امانت</span>
+                                    <strong>{{ assignment.assigned_date|to_jalali:'%Y/%m/%d %H:%M' }}</strong>
+                                </div>
+                                <div>
+                                    <span class="label">تاریخ موعد</span>
+                                    <strong>{{ assignment.due_date|to_jalali:'%Y/%m/%d' }}</strong>
+                                </div>
+                                <div>
+                                    <span class="label">وضعیت</span>
+                                    {% if assignment.is_completed %}
+                                        <span class="status success"><i class="fas fa-check me-1"></i> تکمیل شده</span>
+                                    {% else %}
+                                        <span class="status warning"><i class="fas fa-clock me-1"></i> در حال مطالعه</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <span class="label">امتیاز کسب شده</span>
+                                    {% if assignment.is_completed %}
+                                        <strong class="earned">{{ assignment.reading_score_earned|add:assignment.quiz_score_earned }} امتیاز</strong>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-book-open"></i>
+                <p>هنوز کسی این کتاب را امانت نگرفته است</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="{% url 'books:stage_books' book.stage.id %}" class="btn btn-modern me-3">
+            <i class="fas fa-arrow-right me-2"></i>
+            بازگشت به مرحله
+        </a>
+        <a href="{% url 'books:home' %}" class="btn btn-modern btn-gradient">
+            <i class="fas fa-home me-2"></i>
+            صفحه اصلی
+        </a>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .book-detail-cover {
-        height: 400px;
-        object-fit: cover;
-        border-radius: 8px 8px 0 0;
+    .book-detail-wrapper {
+        padding: 40px 0 60px;
     }
-    
-    .book-detail-placeholder {
-        height: 400px;
-        background: #f8f9fa;
+    .gradient-hero {
+        background: linear-gradient(135deg, #4061f0 0%, #0ea5e9 90%);
+        border-radius: 24px;
+        padding: 36px 32px;
+        color: #fff;
+        box-shadow: 0 22px 50px rgba(15, 23, 42, 0.25);
+    }
+    .badge-group {
         display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+    }
+    .badge-modern {
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 8px 8px 0 0;
-    }
-    
-    .info-item {
-        margin-bottom: 1rem;
-    }
-    
-    .score-card {
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 1.5rem;
-        display: flex;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    
-    .score-icon {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin-left: 1rem;
-    }
-    
-    .score-info h4 {
-        margin: 0;
-        font-weight: bold;
-    }
-    
-    .table th {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 999px;
         font-weight: 600;
+        font-size: .9rem;
+        background: rgba(255,255,255,0.2);
+        color: #fff;
     }
-    
-    .table td {
-        vertical-align: middle;
+    .badge-modern.badge-primary { background: rgba(255,255,255,0.25); }
+    .badge-modern.badge-info { background: rgba(255,255,255,0.2); }
+    .badge-modern.badge-success { background: rgba(255,255,255,0.18); }
+    .badge-modern.badge-secondary {
+        background: rgba(59,130,246,0.2);
+        color: #1d4ed8;
     }
-    
-    .badge {
-        font-size: 0.9rem;
-        padding: 0.5rem 1rem;
+    .book-cover-shell {
+        max-width: 240px;
+        margin: 0 auto;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+    }
+    .book-cover-img {
+        width: 100%;
+        height: 340px;
+        object-fit: cover;
+        display: block;
+    }
+    .book-cover-placeholder {
+        width: 100%;
+        height: 340px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #edf2f7;
+        color: #9ca3af;
+    }
+    .modern-card {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+        height: 100%;
+    }
+    .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .info-list li {
+        padding: 12px 0;
+        border-bottom: 1px dashed #e5e7eb;
+    }
+    .info-list li:last-child { border-bottom: none; }
+    .info-list span {
+        display: block;
+        color: #6b7280;
+        font-size: .9rem;
+    }
+    .info-list strong {
+        display: block;
+        font-weight: 700;
+        color: #111827;
+    }
+    .score-strip {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .score-chip {
+        min-width: 140px;
+        padding: 14px 18px;
+        border-radius: 16px;
+        color: #fff;
+        text-align: center;
+    }
+    .score-chip span {
+        display: block;
+        font-size: .85rem;
+        opacity: .85;
+    }
+    .score-chip strong {
+        display: block;
+        font-size: 1.4rem;
+    }
+    .score-chip.reading { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+    .score-chip.quiz { background: linear-gradient(135deg, #ec4899, #f97316); }
+    .description-text {
+        line-height: 1.9;
+        color: #374151;
+        white-space: pre-line;
+    }
+    .assignment-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+    }
+    .assignment-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 18px;
+        background: #f9fafb;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+    .assignment-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .member-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #eef2ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #4338ca;
+        flex-shrink: 0;
+    }
+    .member-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .assignment-body {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+    }
+    .assignment-body .label {
+        display: block;
+        color: #6b7280;
+        font-size: .85rem;
+        margin-bottom: 4px;
+    }
+    .assignment-body strong {
+        display: block;
+        font-weight: 700;
+        color: #111827;
+    }
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-weight: 600;
+        font-size: .85rem;
+    }
+    .status.success { background: rgba(34,197,94,0.18); color: #047857; }
+    .status.warning { background: rgba(251,191,36,0.2); color: #b45309; }
+    .earned { color: #047857; }
+    .empty-state {
+        text-align: center;
+        padding: 40px 0;
+        color: #6b7280;
+    }
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 10px;
+    }
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 24px;
+        border-radius: 999px;
+        border: 1px solid rgba(37, 99, 235, 0.35);
+        color: #1d4ed8;
+        font-weight: 600;
+        background: #ffffff;
+        transition: all .2s ease;
+    }
+    .btn-modern:hover {
+        background: rgba(37, 99, 235, 0.08);
+        color: #1d4ed8;
+    }
+    .btn-modern.btn-gradient {
+        background: linear-gradient(135deg, #10b981, #14b8a6);
+        border: none;
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(20, 184, 166, 0.3);
+    }
+    .btn-modern.btn-gradient:hover {
+        box-shadow: 0 16px 30px rgba(20, 184, 166, 0.35);
+    }
+    .btn-toggle-assignments {
+        border: 1px solid rgba(37, 99, 235, 0.35);
+        border-radius: 999px;
+        background: #ffffff;
+        color: #1d4ed8;
+        font-weight: 600;
+        padding: 8px 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all .2s ease;
+    }
+    .btn-toggle-assignments:hover {
+        background: rgba(37, 99, 235, 0.08);
+    }
+    .btn-toggle-assignments i {
+        transition: transform .2s ease;
+    }
+    .btn-toggle-assignments.collapsed i {
+        transform: rotate(180deg);
+    }
+    @media (max-width: 992px) {
+        .gradient-hero { text-align: center; }
+        .book-cover-img,
+        .book-cover-placeholder { height: 300px; }
+    }
+    @media (max-width: 576px) {
+        .btn-modern { width: 100%; justify-content: center; }
     }
 </style>
 {% endblock %}
+

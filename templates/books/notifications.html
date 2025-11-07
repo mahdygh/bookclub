@@ -1,0 +1,269 @@
+{% extends 'base_modern.html' %}
+{% load jalali_tags %}
+
+{% block title %}اعلان‌ها - کتابخانه مسجد حوری{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="gradient-hero mb-4">
+        <h1 class="display-5 fw-bold mb-2">
+            <i class="fas fa-bell me-3"></i>
+            اعلان‌های شما
+        </h1>
+        <p class="lead mb-0">همه پیام‌ها و یادآوری‌های شما در یکجا</p>
+    </div>
+
+    {% if notifications %}
+        <div class="notifications-list-modern">
+            {% for notification in notifications %}
+                <div class="notification-card-modern {% if not notification.is_read and notification.recipient %}unread-new{% endif %}">
+                    <div class="notification-card-header">
+                        <div class="notification-icon-modern {% if notification.notification_type == 'due_reminder' %}icon-clock{% elif notification.notification_type == 'private' %}icon-envelope{% else %}icon-bullhorn{% endif %}">
+                            {% if notification.notification_type == 'due_reminder' %}
+                                <i class="fas fa-clock"></i>
+                            {% elif notification.notification_type == 'private' %}
+                                <i class="fas fa-envelope"></i>
+                            {% else %}
+                                <i class="fas fa-bullhorn"></i>
+                            {% endif %}
+                        </div>
+                        <div class="notification-title-wrapper">
+                            <h4 class="notification-title-modern">{{ notification.title }}</h4>
+                            {% if not notification.is_read and notification.recipient %}
+                                <span class="new-badge">جدید</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="notification-body-modern">
+                        <p class="notification-message">{{ notification.message|linebreaksbr }}</p>
+                    </div>
+                    <div class="notification-footer-modern">
+                        <div class="notification-actions-left">
+                            {% if notification.recipient %}
+                                {% if notification.is_read %}
+                                    <span class="status-badge read">خوانده شده</span>
+                                {% else %}
+                                    <a href="{% url 'books:notification_read' notification.pk %}" class="btn-mark-read">
+                                        <i class="fas fa-check me-1"></i>
+                                        علامت خوانده شد
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="notification-actions-right">
+                            {% if user.is_staff or notification.created_by == user %}
+                            <form method="post" action="{% url 'books:notification_delete' notification.pk %}" class="notification-delete-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-delete-notification" onclick="return confirm('از حذف این اعلان مطمئن هستید؟');">
+                                    <i class="fas fa-trash-alt me-1"></i>
+                                    حذف
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="modern-card text-center py-5">
+            <i class="fas fa-bell-slash fa-4x text-muted mb-4"></i>
+            <h4 class="text-muted mb-2">اعلان جدیدی وجود ندارد</h4>
+            <p class="text-muted">وقتی اعلان جدیدی برای شما ارسال شود، اینجا نمایش داده می‌شود.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.notifications-list-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.notification-card-modern {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.08);
+    border: 2px solid rgba(226, 232, 240, 0.6);
+    transition: all 0.3s ease;
+}
+
+.notification-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 40px rgba(15, 23, 42, 0.15);
+    border-color: rgba(17, 153, 142, 0.3);
+}
+
+.notification-card-modern.unread-new {
+    background: linear-gradient(135deg, rgba(17, 153, 142, 0.05) 0%, rgba(56, 239, 125, 0.03) 100%);
+    border-color: rgba(17, 153, 142, 0.4);
+    border-left: 5px solid #11998e;
+    box-shadow: 0 12px 35px rgba(17, 153, 142, 0.18);
+    animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% { border-left-color: #11998e; }
+    50% { border-left-color: #38ef7d; }
+}
+
+.notification-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.notification-icon-modern {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.notification-icon-modern.icon-clock {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: white;
+}
+
+.notification-icon-modern.icon-envelope {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+.notification-icon-modern.icon-bullhorn {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+}
+
+.notification-title-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.notification-title-modern {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.new-badge {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+    animation: pulse-badge 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.notification-body-modern {
+    margin-bottom: 1rem;
+}
+
+.notification-message {
+    color: #4b5563;
+    line-height: 1.8;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.notification-footer-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.notification-actions-left,
+.notification-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-badge.read {
+    background: rgba(34, 197, 94, 0.1);
+    color: #047857;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.btn-mark-read {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    color: white;
+    padding: 0.5rem 1.25rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+}
+
+.btn-mark-read:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+    color: white;
+}
+
+.notification-delete-form {
+    margin: 0;
+}
+
+.btn-delete-notification {
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    color: white;
+    padding: 0.45rem 1.1rem;
+    border-radius: 999px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete-notification:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(239, 68, 68, 0.4);
+}
+
+@media (max-width: 768px) {
+    .notification-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .notification-title-wrapper {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+

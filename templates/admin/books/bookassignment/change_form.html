@@ -1,0 +1,48 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {% if book_assignment_meta %}
+        <script>
+            window.bookAssignmentData = {
+                now: '{{ book_assignment_meta.now }}',
+                current_member_id: {% if book_assignment_meta.current_member_id %}'{{ book_assignment_meta.current_member_id }}'{% else %}null{% endif %},
+                current_book_id: {% if book_assignment_meta.current_book_id %}'{{ book_assignment_meta.current_book_id }}'{% else %}null{% endif %},
+                books: [
+                    {% for book in book_assignment_meta.books %}
+                    {
+                        id: {{ book.id }},
+                        title: '{{ book.title|default:""|escapejs }}',
+                        stage_id: {% if book.stage_id %}{{ book.stage_id }}{% else %}null{% endif %},
+                        reading_days: {{ book.reading_days|default:0 }},
+                        quiz_score: {{ book.quiz_score|default:0 }}
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                members: [
+                    {% for member in book_assignment_meta.members %}
+                    {
+                        id: {{ member.id }},
+                        stage_id: {% if member.stage_id %}{{ member.stage_id }}{% else %}null{% endif %},
+                        stage_name: '{{ member.stage_name|default:""|escapejs }}',
+                        stage_book_ids: [
+                            {% for book_id in member.stage_book_ids %}{{ book_id }}{% if not forloop.last %},{% endif %}{% endfor %}
+                        ],
+                        available_book_ids: [
+                            {% for book_id in member.available_book_ids %}{{ book_id }}{% if not forloop.last %},{% endif %}{% endfor %}
+                        ],
+                        completed_book_ids: [
+                            {% for book_id in member.completed_book_ids %}{{ book_id }}{% if not forloop.last %},{% endif %}{% endfor %}
+                        ]
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            };
+        </script>
+    {% endif %}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+    {{ block.super }}
+{% endblock %}
+

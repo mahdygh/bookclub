@@ -3,9 +3,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.db.models import Count, Sum
-from django.http import JsonResponse
-from .models import ReadingPeriod, Stage, Book, Member, BookAssignment
+from django.db.models import Count, Sum, Exists, OuterRef, F
+from django.db.models.functions import Mod
+from django.http import JsonResponse, Http404
+from django.db.models import Q
+from .models import ReadingPeriod, Stage, Book, Member, BookAssignment, Notification
 import re
 
 def generate_username(member):
@@ -118,14 +120,16 @@ def home(request):
 def stage_books(request, stage_id):
     """نمایش کتاب‌های یک مرحله"""
     stage = get_object_or_404(Stage, id=stage_id)
-    books = Book.objects.filter(stage=stage).order_by('title')
+    base_books = Book.objects.filter(stage=stage).order_by('title')
+    active_assignments = BookAssignment.objects.filter(book=OuterRef('pk'), is_completed=False)
+    books = base_books.annotate(is_in_progress=Exists(active_assignments))
     
     # آمار مرحله
     stage_members = Member.objects.filter(current_stage=stage, is_active=True)
     stage_stats = {
         'total_members': stage_members.count(),
         'completed_members': sum(1 for m in stage_members if m.can_advance_to_next_stage()),
-        'total_books': books.count(),
+        'total_books': base_books.count(),
     }
     
     context = {
@@ -141,10 +145,13 @@ def book_detail(request, book_id):
     
     # تخصیص‌های این کتاب
     assignments = BookAssignment.objects.filter(book=book).select_related('member').order_by('-assigned_date')
-    
+    active_count = BookAssignment.objects.filter(book=book, is_completed=False).count()
+    available_copies = max((book.stock_count or 0) - active_count, 0)
+
     context = {
         'book': book,
         'assignments': assignments,
+        'available_copies': available_copies,
     }
     return render(request, 'books/book_detail.html', context)
 
@@ -188,7 +195,7 @@ def rankings(request):
                 is_completed=True
             ).count()
         
-        # رتبه‌بندی گروه (فقط گروه خود کاربر)
+        # رتبه‌بندی گروه (گروه کاربر و همه گروه‌ها برای ادمین)
         user_group_rankings = []
         if current_member:
             user_group_rankings = Member.objects.filter(
@@ -197,6 +204,17 @@ def rankings(request):
             ).annotate(
                 total_books_completed=Count('bookassignment', filter=Q(bookassignment__is_completed=True))
             ).order_by('-total_score')
+
+        group_rankings_all = []
+        for code, label in Member.GROUP_CHOICES:
+            members_in_group = list(
+                overall_rankings.filter(group=code)
+            )
+            group_rankings_all.append({
+                'code': code,
+                'label': label,
+                'members': members_in_group,
+            })
         
         # رتبه‌بندی مراحل
         stages = Stage.objects.filter(period=active_period).order_by('order')
@@ -227,6 +245,8 @@ def rankings(request):
             'current_member': current_member,
             'stage_rankings': stage_rankings,
             'week_start': week_start,
+            'group_rankings_all': group_rankings_all,
+            'show_all_groups': request.user.is_staff,
         }
     except ReadingPeriod.DoesNotExist:
         context = {
@@ -236,6 +256,8 @@ def rankings(request):
             'user_group_rankings': [],
             'current_member': current_member,
             'stage_rankings': {},
+            'group_rankings_all': [],
+            'show_all_groups': request.user.is_staff,
         }
     
     return render(request, 'books/rankings_modern.html', context)
@@ -327,7 +349,18 @@ def assign_book(request):
     
     # نمایش فرم امانت گرفتن
     members = Member.objects.filter(is_active=True).order_by('first_name')
-    books = Book.objects.all().order_by('stage__order', 'title')
+
+    books = (
+        Book.objects.annotate(
+            stage_parity=Mod('stage__stage_number', 2),
+            active_count=Count('bookassignment', filter=Q(bookassignment__is_completed=False))
+        )
+        .filter(stage_parity=1)
+        .filter(stock_count__gt=0)
+        .filter(active_count__lt=F('stock_count'))
+        .select_related('stage')
+        .order_by('stage__order', 'title')
+    )
     active_assignments = BookAssignment.objects.filter(is_completed=False).count()
     completed_assignments = BookAssignment.objects.filter(is_completed=True).count()
     
@@ -481,6 +514,8 @@ def user_progress(request):
             book__stage__period=active_period
         ).select_related('book', 'book__stage').order_by('book__stage__order', 'book__title')
         
+        total_pages_read = assignments.filter(is_completed=True).aggregate(total_pages=Sum('pages_read'))['total_pages'] or 0
+
         # کتاب‌های خوانده شده و نخوانده
         completed_books = []
         uncompleted_books = []
@@ -492,7 +527,8 @@ def user_progress(request):
                     'book': book,
                     'assignment': assignment,
                     'score': assignment.reading_score_earned + assignment.quiz_score_earned,
-                    'returned_date': assignment.returned_date
+                    'returned_date': assignment.returned_date,
+                    'pages': assignment.pages_read or book.page_count
                 })
             else:
                 uncompleted_books.append({
@@ -570,6 +606,7 @@ def user_progress(request):
             'uncompleted_books': uncompleted_books,
             'progress_stats': progress_stats,
             'rankings': rankings,
+            'total_pages_read': total_pages_read,
             'total_assignments': assignments.count(),
             'completed_assignments': assignments.filter(is_completed=True).count(),
             'show_welcome': show_welcome,
@@ -674,7 +711,7 @@ def api_rankings(request):
 def user_login(request):
     """صفحه ورود کاربران عادی"""
     if request.user.is_authenticated:
-        return redirect('books:home')
+        return redirect('books:user_progress')
     
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -686,7 +723,7 @@ def user_login(request):
                 login(request, user)
                 # تنظیم flag برای نمایش پیام خوش‌آمدگویی
                 request.session['just_logged_in'] = True
-                next_url = request.GET.get('next', 'books:home')
+                next_url = request.POST.get('next') or request.GET.get('next') or 'books:user_progress'
                 return redirect(next_url)
             else:
                 messages.error(request, 'نام کاربری و رمز عبور اشتباه است. برای دریافت نام کاربری و رمز عبور به مربی مراجعه کنید.')
@@ -757,4 +794,40 @@ def manage_members(request):
         'members': members,
     }
     return render(request, 'books/manage_members.html', context)
+
+
+@login_required
+def notifications_list(request):
+    notifications = Notification.objects.filter(
+        Q(recipient=request.user) | Q(recipient__isnull=True)
+    ).order_by('is_read', '-created_at')
+    return render(request, 'books/notifications.html', {
+        'notifications': notifications,
+    })
+
+
+@login_required
+def mark_notification_read(request, notification_id):
+    notification = Notification.objects.filter(pk=notification_id).first()
+    if not notification:
+        raise Http404
+    if notification.recipient and notification.recipient != request.user and not request.user.is_staff:
+        raise Http404
+    notification.mark_as_read()
+    return redirect(request.META.get('HTTP_REFERER', 'books:notifications'))
+
+
+@login_required
+def delete_notification(request, notification_id):
+    notification = Notification.objects.filter(pk=notification_id).first()
+    if not notification:
+        raise Http404
+    if not request.user.is_staff and notification.created_by != request.user:
+        raise Http404
+    if request.method == 'POST':
+        notification.delete()
+        messages.success(request, 'اعلان حذف شد.')
+    else:
+        messages.error(request, 'عملیات نامعتبر بود.')
+    return redirect('books:notifications')
 
