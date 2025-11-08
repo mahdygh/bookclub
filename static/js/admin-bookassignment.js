@@ -252,17 +252,20 @@ function initAssignmentFormHelpers() {
         return showAllButton;
     };
 
-    const setExtraVisibility = function (expand) {
-        const extraOptions = Array.from(bookSelect.options).filter(function (option) {
-            return option.dataset.extra === 'true';
-        });
-        extraOptions.forEach(function (option) {
-            option.hidden = !expand;
-        });
-        bookSelect.dataset.extraVisible = expand ? 'true' : 'false';
-        if (showAllButton) {
-            showAllButton.textContent = expand ? 'نمایش کمتر' : 'نمایش همه کتاب‌ها';
+    let filtersEnabled = false;
+
+    const updateFilterButtonState = function () {
+        if (!showAllButton) {
+            return;
         }
+        showAllButton.textContent = filtersEnabled ? 'نمایش بیشتر' : 'نمایش کمتر';
+        showAllButton.dataset.filterState = filtersEnabled ? 'on' : 'off';
+    };
+
+    const toggleFilters = function () {
+        filtersEnabled = !filtersEnabled;
+        updateFilterButtonState();
+        updateBooksForMember(memberSelect ? memberSelect.value : null, true);
     };
 
     const rebuildBookOptions = function (allowedIds, preserveSelection) {
@@ -275,7 +278,11 @@ function initAssignmentFormHelpers() {
         if (allowedIds.length === 0) {
             const emptyOption = document.createElement('option');
             emptyOption.value = '';
-            emptyOption.textContent = 'کتابی برای این مرحله موجود نیست';
+            if (filtersEnabled) {
+                emptyOption.textContent = 'کتابی با شرایط فیلتر یافت نشد (نمایش بیشتر را بزنید)';
+            } else {
+                emptyOption.textContent = 'کتابی برای این مرحله موجود نیست';
+            }
             emptyOption.disabled = true;
             emptyOption.selected = true;
             bookSelect.appendChild(emptyOption);
@@ -288,53 +295,16 @@ function initAssignmentFormHelpers() {
         placeholder.textContent = 'یک کتاب را انتخاب کنید';
         bookSelect.appendChild(placeholder);
 
-        const primaryIds = allowedIds.slice(0, Math.max(0, maxInitialOptions));
-        const extraIds = allowedIds.slice(primaryIds.length);
-
-        const createOption = function (id, isExtra) {
+        allowedIds.forEach(function (id) {
             const bookData = booksMap[String(id)];
             if (!bookData) {
-                return null;
+                return;
             }
             const option = document.createElement('option');
             option.value = String(id);
-            const available = typeof bookData.available_copies === 'number' ? bookData.available_copies : null;
-            const stock = typeof bookData.stock_count === 'number' ? bookData.stock_count : null;
-            let label = bookData.title || ('کتاب #' + id);
-            if (available !== null) {
-                label += ` (نسخه موجود: ${available})`;
-            } else if (stock !== null) {
-                label += ` (موجودی: ${stock})`;
-            }
-            option.textContent = label;
-            if (isExtra) {
-                option.dataset.extra = 'true';
-            }
+            option.textContent = bookData.title || ('کتاب #' + id);
             bookSelect.appendChild(option);
-            return option;
-        };
-
-        primaryIds.forEach(function (id) {
-            createOption(id, false);
         });
-
-        extraIds.forEach(function (id) {
-            createOption(id, true);
-        });
-
-        const extraOptions = Array.from(bookSelect.options).filter(function (option) {
-            return option.dataset.extra === 'true';
-        });
-
-        if (extraOptions.length > 0) {
-            ensureShowAllButton();
-            const shouldExpand = previousValue && extraIds.includes(previousValue);
-            setExtraVisibility(shouldExpand);
-            showAllButton.style.display = '';
-        } else if (showAllButton) {
-            showAllButton.style.display = 'none';
-            setExtraVisibility(true);
-        }
 
         if (previousValue && allowedIds.includes(previousValue)) {
             bookSelect.value = previousValue;
@@ -343,6 +313,19 @@ function initAssignmentFormHelpers() {
         }
 
         bookSelect.dispatchEvent(new Event('change'));
+    };
+
+    const getAllowedBookIds = function (memberId) {
+        const data = membersMap[String(memberId)] || null;
+        if (!data) {
+            return [];
+        }
+        const baseList = filtersEnabled ? data.available_book_ids : data.stage_book_ids;
+        const allowed = baseList.slice();
+        if (currentBookId && data.stage_book_ids.includes(currentBookId) && !allowed.includes(currentBookId)) {
+            allowed.push(currentBookId);
+        }
+        return allowed;
     };
 
     const updateBooksForMember = function (memberId, preserveSelection) {
@@ -362,12 +345,24 @@ function initAssignmentFormHelpers() {
 
         const allowed = getAllowedBookIds(memberId);
         rebuildBookOptions(allowed, preserveSelection);
+        ensureShowAllButton();
+        updateFilterButtonState();
     };
 
     if (memberSelect) {
         memberSelect.addEventListener('change', function () {
             updateBooksForMember(memberSelect.value, false);
         });
+    }
+
+    ensureShowAllButton();
+    if (showAllButton) {
+        showAllButton.style.marginTop = '8px';
+        showAllButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            toggleFilters();
+        });
+        updateFilterButtonState();
     }
 
     bookSelect.addEventListener('change', function () {

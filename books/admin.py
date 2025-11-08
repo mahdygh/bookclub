@@ -1,10 +1,12 @@
-from django.contrib import admin
-from django.utils.html import format_html
-from django.utils import timezone
 from datetime import date, timedelta
-from django import forms
+
 import jdatetime
+from django import forms
+from django.contrib import admin
+from django.utils import timezone
+from django.utils.html import format_html
 from django.db.models import Count
+
 from .models import ReadingPeriod, Stage, Book, Member, BookAssignment, WeeklyScore, Notification
 
 class ReadingPeriodAdminForm(forms.ModelForm):
@@ -153,14 +155,6 @@ class BookAssignmentAdminForm(forms.ModelForm):
                     candidate = self.initial.get('member')
                 selected_member_id = candidate
 
-            active_books_qs = BookAssignment.objects.filter(is_completed=False)
-            if self.instance.pk:
-                active_books_qs = active_books_qs.exclude(pk=self.instance.pk)
-            active_counts = {
-                row['book_id']: row['cnt']
-                for row in active_books_qs.values('book_id').annotate(cnt=Count('id'))
-            }
-
             book_field.queryset = Book.objects.none()
 
             member = None
@@ -172,30 +166,13 @@ class BookAssignmentAdminForm(forms.ModelForm):
 
             if member and member.current_stage:
                 stage_books = Book.objects.filter(stage=member.current_stage).select_related('stage').order_by('title')
-                completed_book_ids = set(
-                    BookAssignment.objects.filter(member=member, is_completed=True)
-                    .values_list('book_id', flat=True)
-                )
+                stage_book_ids = list(stage_books.values_list('id', flat=True))
 
-                available_book_ids = []
-                for book in stage_books:
-                    stock = book.stock_count or 0
-                    if stock <= 0:
-                        continue
-                    if book.id in completed_book_ids:
-                        continue
-                    active_count = active_counts.get(book.id, 0)
-                    if active_count >= stock:
-                        continue
-                    available_book_ids.append(book.id)
+                if self.instance.pk and self.instance.book_id and self.instance.book_id not in stage_book_ids:
+                    stage_book_ids.append(self.instance.book_id)
 
-                if self.instance.pk and self.instance.book_id and self.instance.book_id not in available_book_ids:
-                    available_book_ids.append(self.instance.book_id)
-
-                available_book_ids = list(dict.fromkeys(available_book_ids))
-
-                if available_book_ids:
-                    book_field.queryset = Book.objects.filter(pk__in=available_book_ids).order_by('title')
+                if stage_book_ids:
+                    book_field.queryset = Book.objects.filter(pk__in=stage_book_ids).order_by('title')
             elif self.instance.pk and self.instance.book_id:
                 book_field.queryset = Book.objects.filter(pk=self.instance.book_id)
 
@@ -250,22 +227,6 @@ class BookAssignmentAdminForm(forms.ModelForm):
 
             if member and getattr(member, 'current_stage', None) and book.stage_id != member.current_stage_id:
                 self.add_error('book', 'کتاب انتخاب شده باید مربوط به مرحله فعلی عضو باشد.')
-
-            conflict_qs = BookAssignment.objects.filter(book=book, is_completed=False)
-            if self.instance.pk:
-                conflict_qs = conflict_qs.exclude(pk=self.instance.pk)
-            active_count = conflict_qs.count()
-            stock = book.stock_count or 0
-            if stock <= 0:
-                self.add_error('book', 'برای این کتاب هیچ نسخه‌ای تعریف نشده است.')
-            elif active_count >= stock:
-                self.add_error('book', 'تمام نسخه‌های این کتاب در حال امانت است.')
-
-            completed_qs = BookAssignment.objects.filter(member=member, book=book, is_completed=True)
-            if self.instance.pk:
-                completed_qs = completed_qs.exclude(pk=self.instance.pk)
-            if member and completed_qs.exists():
-                self.add_error('book', 'این عضو قبلاً این کتاب را مطالعه کرده است.')
 
         if returned_date is not None:
             if timezone.is_naive(returned_date):
@@ -375,6 +336,8 @@ class BookAssignmentAdmin(admin.ModelAdmin):
         extra_context = extra_context or {}
         current_assignment = self.get_object(request, object_id) if object_id else None
 
+        BookAssignment.normalize_all_returned()
+
         active_books_qs = BookAssignment.objects.filter(is_completed=False)
         if current_assignment:
             active_books_qs = active_books_qs.exclude(pk=current_assignment.pk)
@@ -385,13 +348,13 @@ class BookAssignmentAdmin(admin.ModelAdmin):
 
         books_queryset = Book.objects.select_related('stage').all()
         book_availability = {}
-        book_payload = []
+        books_payload = []
         for book in books_queryset:
             stock = book.stock_count or 0
             active_count = active_counts.get(book.id, 0)
             available = max(stock - active_count, 0)
             book_availability[book.id] = available
-            book_payload.append({
+            books_payload.append({
                 'id': book.id,
                 'title': book.title,
                 'reading_days': book.reading_days,
@@ -405,22 +368,32 @@ class BookAssignmentAdmin(admin.ModelAdmin):
         members_queryset = Member.objects.filter(is_active=True).select_related('current_stage')
         for member in members_queryset:
             if member.current_stage:
-                stage_book_ids = list(Book.objects.filter(stage=member.current_stage).values_list('id', flat=True))
+                stage_books = Book.objects.filter(stage=member.current_stage).select_related('stage').order_by('title')
+                stage_book_ids = [book.id for book in stage_books]
             else:
+                stage_books = Book.objects.none()
                 stage_book_ids = []
 
-            completed_book_ids = list(
-                BookAssignment.objects.filter(member=member, is_completed=True).values_list('book_id', flat=True)
-            )
+            completed_book_ids = list(BookAssignment.objects.filter(
+                member=member,
+                is_completed=True
+            ).values_list('book_id', flat=True))
 
-            available_book_ids = [
-                bid for bid in stage_book_ids
-                if bid not in completed_book_ids and book_availability.get(bid, 0) > 0
-            ]
+            filtered_book_ids = []
+            for book in stage_books:
+                if book.id in completed_book_ids:
+                    continue
+                if book_availability.get(book.id, 0) <= 0:
+                    continue
+                filtered_book_ids.append(book.id)
+
+            available_book_ids = filtered_book_ids or []
 
             if current_assignment and current_assignment.member_id == member.id and current_assignment.book_id:
                 if current_assignment.book_id not in available_book_ids:
                     available_book_ids.append(current_assignment.book_id)
+                if current_assignment.book_id not in stage_book_ids:
+                    stage_book_ids.append(current_assignment.book_id)
 
             members_payload.append({
                 'id': member.id,
@@ -435,7 +408,7 @@ class BookAssignmentAdmin(admin.ModelAdmin):
             'now': timezone.localtime().strftime('%Y-%m-%dT%H:%M'),
             'current_member_id': current_assignment.member_id if current_assignment else None,
             'current_book_id': current_assignment.book_id if current_assignment else None,
-            'books': book_payload,
+            'books': books_payload,
             'members': members_payload,
             'max_initial_options': 3,
         }

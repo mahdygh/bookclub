@@ -283,6 +283,48 @@ class BookAssignment(models.Model):
 
         return 0
 
+    def normalize_completion_state(self):
+        if not self.returned_date:
+            return False
+
+        changed_fields = set()
+
+        if not self.is_completed:
+            self.is_completed = True
+            changed_fields.add('is_completed')
+
+        if self.book:
+            if not self.reading_score_base:
+                self.reading_score_base = self.book.reading_score
+                changed_fields.add('reading_score_base')
+            if not self.quiz_score_base:
+                self.quiz_score_base = self.book.quiz_score
+                changed_fields.add('quiz_score_base')
+            if not self.quiz_score_earned:
+                self.quiz_score_earned = self.book.quiz_score
+                changed_fields.add('quiz_score_earned')
+            if not self.pages_read:
+                self.pages_read = self.book.page_count or 0
+                changed_fields.add('pages_read')
+
+        recalculated_reading = self.calculate_late_penalty()
+        if self.reading_score_earned != recalculated_reading:
+            self.reading_score_earned = recalculated_reading
+            changed_fields.update({'reading_score_earned', 'late_days'})
+
+        if not changed_fields:
+            return False
+
+        changed_fields.add('returned_date')
+        self.save(update_fields=list(changed_fields))
+        return True
+
+    @classmethod
+    def normalize_all_returned(cls):
+        pending_qs = cls.objects.filter(returned_date__isnull=False, is_completed=False)
+        for assignment in pending_qs.select_related('book', 'member'):
+            assignment.normalize_completion_state()
+
     def save(self, *args, **kwargs):
         previous_instance = None
         if self.pk:
@@ -291,8 +333,38 @@ class BookAssignment(models.Model):
             except BookAssignment.DoesNotExist:
                 previous_instance = None
 
+        if self.returned_date and timezone.is_naive(self.returned_date):
+            self.returned_date = timezone.make_aware(self.returned_date, timezone.get_current_timezone())
+
         if not self.due_date:
             self.due_date = self.assigned_date + timedelta(days=self.book.reading_days)
+        elif timezone.is_naive(self.due_date):
+            self.due_date = timezone.make_aware(self.due_date, timezone.get_current_timezone())
+
+        auto_completed = False
+        if self.returned_date and not self.is_completed:
+            self.is_completed = True
+            auto_completed = True
+
+        if self.book:
+            if self.is_completed:
+                if self.reading_score_base in (None, 0):
+                    self.reading_score_base = self.book.reading_score
+                if self.quiz_score_base in (None, 0):
+                    self.quiz_score_base = self.book.quiz_score
+                if self.quiz_score_earned in (None, 0):
+                    self.quiz_score_earned = self.book.quiz_score
+                if self.pages_read in (None, 0):
+                    self.pages_read = self.book.page_count or 0
+
+                if auto_completed or self.reading_score_earned is None:
+                    self.reading_score_earned = self.calculate_late_penalty()
+                elif self.returned_date and (self.late_days is None or self.late_days < 0):
+                    self.calculate_late_penalty()
+            else:
+                if self.pages_read is None:
+                    self.pages_read = 0
+                self.late_days = self.late_days or 0
 
         super().save(*args, **kwargs)
         self.sync_member_scores(previous_instance)
