@@ -266,6 +266,23 @@ class BookAssignment(models.Model):
         quiz = self.quiz_score_earned or 0
         return max(reading, 0) + max(quiz, 0)
 
+    @property
+    def penalty_amount(self):
+        base_score = self.reading_score_base
+        if not base_score and base_score != 0:
+            base_score = self.book.reading_score if self.book else 0
+        base_score = max(base_score or 0, 0)
+        earned_score = max(self.reading_score_earned or 0, 0)
+
+        if self.is_completed:
+            return max(base_score - earned_score, 0)
+
+        late_days = max(self.late_days or 0, 0)
+        if late_days > 0:
+            return min(base_score, late_days * 2)
+
+        return 0
+
     def save(self, *args, **kwargs):
         previous_instance = None
         if self.pk:
