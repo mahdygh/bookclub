@@ -213,45 +213,6 @@ function initAssignmentFormHelpers() {
         });
     }
 
-    const getAllowedBookIds = function (memberId) {
-        const data = membersMap[String(memberId)] || null;
-        if (!data) {
-            return [];
-        }
-        const allowed = data.available_book_ids.slice();
-        if (currentBookId && data.stage_book_ids.includes(currentBookId)) {
-            if (!allowed.includes(currentBookId)) {
-                allowed.push(currentBookId);
-            }
-        }
-        return allowed;
-    };
-
-    let showAllButton = null;
-
-    const ensureShowAllButton = function () {
-        if (showAllButton) {
-            return showAllButton;
-        }
-        const wrapper = bookSelect.parentElement;
-        if (!wrapper) {
-            return null;
-        }
-        showAllButton = document.createElement('button');
-        showAllButton.type = 'button';
-        showAllButton.id = 'show-all-books-btn';
-        showAllButton.className = 'btn show-all-books-btn';
-        showAllButton.textContent = 'نمایش همه کتاب‌ها';
-        showAllButton.style.marginTop = '8px';
-        showAllButton.addEventListener('click', function (event) {
-            event.preventDefault();
-            const expanded = bookSelect.dataset.extraVisible === 'true';
-            setExtraVisibility(!expanded);
-        });
-        wrapper.appendChild(showAllButton);
-        return showAllButton;
-    };
-
     let filtersEnabled = false;
 
     const updateFilterButtonState = function () {
@@ -313,6 +274,25 @@ function initAssignmentFormHelpers() {
         }
 
         bookSelect.dispatchEvent(new Event('change'));
+    };
+
+    let showAllButton = null;
+
+    const ensureShowAllButton = function () {
+        if (showAllButton) {
+            return showAllButton;
+        }
+        const wrapper = bookSelect.parentElement;
+        if (!wrapper) {
+            return null;
+        }
+        showAllButton = document.createElement('button');
+        showAllButton.type = 'button';
+        showAllButton.id = 'show-all-books-btn';
+        showAllButton.className = 'btn show-all-books-btn';
+        showAllButton.style.marginTop = '8px';
+        wrapper.appendChild(showAllButton);
+        return showAllButton;
     };
 
     const getAllowedBookIds = function (memberId) {
